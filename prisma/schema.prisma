@@ -1,0 +1,182 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+// ========================
+// Auth models
+// ========================
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  authenticators Authenticator[]
+
+  // Booking relations
+  reservations Reservation[]
+  reviews      Review[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+// ========================
+// Booking models
+// ========================
+
+// Tỉnh / Thành phố
+model Province {
+  id        Int       @id
+  name      String
+  districts District[]
+  listings  Listing[]
+}
+
+// Quận / Huyện
+model District {
+  id         Int       @id
+  name       String
+  provinceId Int
+  province   Province  @relation(fields: [provinceId], references: [id])
+  listings   Listing[]
+}
+
+// Tiện nghi
+model Amenity {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  listings  ListingAmenity[]
+}
+
+// Bảng trung gian Many-to-Many
+model ListingAmenity {
+  id        String   @id @default(cuid())
+  listingId String
+  amenityId String
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, amenityId])
+}
+
+// Listing
+model Listing {
+  id            String     @id @default(cuid())
+  name          String
+  type          String     // Hotel, Homestay, Resort...
+  desc          String
+  pricePerNight Float
+  beds          Int
+  imageUrls     String[]
+  thumbnail     String    
+  hasFreeWifi   Boolean    @default(false)
+
+  provinceId Int?
+  districtId Int?
+
+  province   Province? @relation(fields: [provinceId], references: [id])
+  district   District? @relation(fields: [districtId], references: [id])
+
+  // new: average rating computed from related Review.stars (stored value)
+  avgRating    Float      @default(0)
+
+  reviews        Review[]
+  reservations   Reservation[]
+  amenities      ListingAmenity[]
+}
+
+// Đặt phòng
+model Reservation {
+  id            String   @id @default(cuid())
+  startDate     DateTime
+  endDate       DateTime
+  chargeId      String
+  daysDifference Int
+  reservedDates Int[]     @default([])
+
+  listingId String
+  userId    String
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Review đánh giá
+model Review {
+  id        String   @id @default(cuid())
+  text      String
+  stars     Int      // 1–5
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listingId String
+  userId    String
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
