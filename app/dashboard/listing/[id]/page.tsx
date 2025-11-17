@@ -1,3 +1,4 @@
+import React from "react";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import ImageGallery from "@/app/_components/image-gallery";
 import { Star, MapPin, Wifi, Utensils, Dumbbell } from "lucide-react";
@@ -7,9 +8,12 @@ import Link from "next/link";
 export default async function HotelDetailPage({
   params,
 }: {
-  params: { id: string };
+  // params may be a direct object or a Promise that resolves to the object
+  params: { id: string } | Promise<{ id: string }>;
 }) {
-  const listing = await getListingById(params.id);
+  // unwrap params safely in async server component (await works for both Promise and plain object)
+  const resolvedParams = (await params) as { id: string };
+  const listing = await getListingById(resolvedParams.id);
 
   if (!listing) {
     return (

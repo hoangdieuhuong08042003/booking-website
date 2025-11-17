@@ -1,20 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import { createReservation } from "@/app/_actions/reservation/reservation-actions";
+import { useSession } from "next-auth/react";
 
 export default function BookingPage({
   params,
 }: {
-  params: { listingId: string };
+  // params may be a direct object or a Promise that resolves to the object
+  params: { listingId: string } | Promise<{ listingId: string }>;
   searchParams: { roomId?: string };
 }) {
-  // keep the raw param as string to support slugs (e.g. "dn-family-villa")
-  const listingParam = params.listingId;
+  // <-- changed: unwrap params correctly in client component
+  const listingParam = (params as { listingId: string }).listingId;
+  const { data: session } = useSession();
 
   const [formData, setFormData] = useState({
     checkIn: "",
@@ -83,7 +86,8 @@ export default function BookingPage({
 
     const reservationPayload = {
       listingId: listingKey,
-      userId: localStorage.getItem("userId") || "", // pass empty -> server action will create guest if needed
+      // <-- changed: prefer authenticated user id if available
+      userId: session?.user?.id ?? "",
       startDate: formData.checkIn ? new Date(formData.checkIn) : new Date(),
       endDate: formData.checkOut ? new Date(formData.checkOut) : new Date(),
       chargeId: `local_${Math.random().toString(36).substr(2, 9)}`,
@@ -99,7 +103,7 @@ export default function BookingPage({
       setSubmitting(false);
 
       setTimeout(() => {
-        window.location.href = "/dashboard/bookings";
+        window.location.href = "/dashboard/mybookings";
       }, 2000);
     } catch (err: unknown) {
       console.error("Reservation error:", err);
@@ -125,6 +129,26 @@ export default function BookingPage({
 
   const nights = calculateNights();
   const totalPrice = nights > 0 ? pricePerNight * nights : 0;
+
+  // Prefill customer info from next-auth session (if available)
+  useEffect(() => {
+    if (!session?.user) return;
+    const name = session.user.name ?? "";
+    const parts = name.trim().split(/\s+/);
+    const first = parts.length ? parts[0] : "";
+    const last = parts.length > 1 ? parts.slice(1).join(" ") : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      // only fill when the field is currently empty to avoid overwriting user edits
+      firstName: prev.firstName || first,
+      lastName: prev.lastName || last,
+      email: prev.email || session.user.email || "",
+      // NOTE: do not attempt to read session.user.phone — phone isn't provided in session
+      // phone stays as prev.phone so we don't overwrite or reference a nonexistent field
+      phone: prev.phone,
+    }));
+  }, [session]);
 
   if (bookingConfirmed) {
     return (
