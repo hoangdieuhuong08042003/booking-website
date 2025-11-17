@@ -110,6 +110,9 @@ export default async function HotelDetailPage({
                   <h2 className="text-2xl font-bold mb-4">Thông tin khác</h2>
                   <div className="space-y-2 text-muted-foreground">
                     <div>
+                      Số phòng còn trống: {listing.roomsAvailable ?? "—"}
+                    </div>
+                    <div>
                       Giường:{" "}
                       {typeof listing.beds === "number" ? listing.beds : "—"}
                     </div>

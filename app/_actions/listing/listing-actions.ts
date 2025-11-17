@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma, ReservationStatus } from "@prisma/client";
+import { updateExpiredReservations } from "@/app/_actions/reservation/reservation-actions";
 
 /**
  * Tạo listing — trả về các trường cơ bản
@@ -17,8 +19,9 @@ async function createListing(data: {
   provinceId?: number | null;
   districtId?: number | null;
   amenityIds?: string[]; // <-- để tạo quan hệ tiện nghi
+  roomsAvailable?: number; // <-- new optional input
 }) {
-  const { amenityIds, thumbnail, ...rest } = data;
+  const { amenityIds, thumbnail, roomsAvailable, ...rest } = data;
   // thumbnail is required by input/schema — use it directly
   const computedThumbnail = thumbnail;
 
@@ -27,6 +30,7 @@ async function createListing(data: {
       ...rest,
       imageUrls: rest.imageUrls ?? [],
       thumbnail: computedThumbnail,
+      roomsAvailable: roomsAvailable ?? 0, // persist roomsAvailable
       amenities:
         amenityIds && amenityIds.length > 0
           ? {
@@ -49,6 +53,7 @@ async function createListing(data: {
       provinceId: true,
       districtId: true,
       avgRating: true,
+      roomsAvailable: true, // include new field in response
       // trả về danh sách tiện nghi (id + name)
       amenities: {
         select: {
@@ -85,6 +90,7 @@ async function getNewestListings() {
       provinceId: true,
       districtId: true,
       avgRating: true,
+      roomsAvailable: true,
       province: { select: { id: true, name: true } },
       district: { select: { id: true, name: true } },
       amenities: {
@@ -124,13 +130,29 @@ async function searchListings({
   type?: string;
   selectedAmenities?: string[];
 }) {
+  // ensure expired reservations are finalized before computing availability
+  await updateExpiredReservations();
+
   // Tính số giường tối thiểu dựa trên numGuests (1 bed = 2 người)
   let minBeds: number | undefined;
   if (numGuests) {
     minBeds = Math.ceil(numGuests / 2);
   }
 
-  return prisma.listing.findMany({
+  // build reservation overlap filter:
+  const reservationDateWhere: Prisma.ReservationWhereInput = startDate && endDate
+    ? {
+        AND: [
+          { startDate: { lte: endDate } },
+          { endDate: { gte: startDate } },
+        ],
+      }
+    : { endDate: { gte: new Date() } };
+const blockingStatus: ReservationStatus[] = [ReservationStatus.ACTIVE, ReservationStatus.BLOCKED];
+
+
+  // Fetch listings with reservations matching the above filter so we can compute availability
+  const listings = await prisma.listing.findMany({
     where: {
       provinceId: provinceId ?? undefined,
       districtId: districtId ?? undefined,
@@ -143,29 +165,32 @@ async function searchListings({
       amenities: selectedAmenities.length
         ? { every: { amenity: { name: { in: selectedAmenities } } } }
         : undefined,
-      // Chỉ hiển thị nếu không có reservation trùng ngày
-      reservations:
-        startDate && endDate
-          ? {
-              none: {
-                OR: [
-                  {
-                    startDate: { lte: endDate },
-                    endDate: { gte: startDate },
-                  },
-                ],
-              },
-            }
-          : undefined,
     },
     include: {
       province: true,
       district: true,
       amenities: { include: { amenity: true } },
+      // include only overlapping (or future) reservations that actually block rooms
+      reservations: { where: { AND: [reservationDateWhere, { status: { in: blockingStatus } }] }, select: { id: true } },
     },
     orderBy: { avgRating: "desc" },
     take: 20,
   });
+
+  // compute availableRooms = roomsAvailable - number of overlapping blocking reservations
+  const results = listings
+    .map((l) => {
+      const overlappingCount = Array.isArray(l.reservations) ? l.reservations.length : 0;
+      const availableRooms = (l.roomsAvailable ?? 0) - overlappingCount;
+      return {
+        ...l,
+        reservations: undefined,
+        availableRooms,
+      };
+    })
+    .filter((l) => (l.availableRooms ?? 0) > 0);
+
+  return results;
 }
 
 async function getListingById(listingId: string) {
@@ -180,9 +205,12 @@ async function getListingById(listingId: string) {
   return listing;
 }
 
+// (REMOVE) createReservation implementation moved to reservation-actions.ts
+
 export {
   createListing,
   getNewestListings,
   searchListings,
   getListingById,
+  // createReservation removed from here
 };

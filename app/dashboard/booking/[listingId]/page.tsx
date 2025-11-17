@@ -3,18 +3,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Calendar, Users, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
+import { createReservation } from "@/app/_actions/reservation/reservation-actions";
 
 export default function BookingPage({
   params,
-  searchParams,
 }: {
-  params: { hotelId: string };
+  params: { listingId: string };
   searchParams: { roomId?: string };
 }) {
-  const hotelId = parseInt(params.hotelId);
-  const roomId = parseInt(searchParams.roomId || "1");
+  // keep the raw param as string to support slugs (e.g. "dn-family-villa")
+  const listingParam = params.listingId;
 
   const [formData, setFormData] = useState({
     checkIn: "",
@@ -28,41 +28,90 @@ export default function BookingPage({
   });
 
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const hotelNames: { [key: number]: string } = {
-    1: "Hôtel Métropole Hà Nội",
-    2: "Riverside Resort Hội An",
-    3: "Phu Quoc Paradise",
+  // Support lookup by slug or numeric id (as string). Add/extend entries as needed.
+  const hotelNames: { [key: string]: string } = {
+    "1": "Hôtel Métropole Hà Nội",
+    "2": "Riverside Resort Hội An",
+    "3": "Phu Quoc Paradise",
+    // add known slugs here
+    "dn-family-villa": "DN Family Villa",
   };
 
-  const roomPrices: { [key: number]: number } = {
-    1: 2500000,
-    2: 1800000,
-    3: 2200000,
+  const roomPrices: { [key: string]: number } = {
+    "1": 2500000,
+    "2": 1800000,
+    "3": 2200000,
+    // add known slugs here
+    "dn-family-villa": 2000000,
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Determine effective key: prefer slug (raw param). If it's numeric string, that will still work.
+  const listingKey = listingParam;
+  const hotelName = hotelNames[listingKey] ?? `Khách sạn ${listingParam}`;
+  const pricePerNight = roomPrices[listingKey] ?? 2000000; // fallback price
+
+  // Helper: format Date -> YYYYMMDD as number (Int[])
+  const formatDateInt = (d: Date) => {
+    return parseInt(d.toISOString().slice(0, 10).replace(/-/g, ""));
+  };
+
+  // Helper: generate reserved dates from checkIn (inclusive) to checkOut (exclusive)
+  const getReservedDates = (checkInStr: string, checkOutStr: string) => {
+    if (!checkInStr || !checkOutStr) return [] as number[];
+    const arr: number[] = [];
+    const cur = new Date(checkInStr);
+    const end = new Date(checkOutStr);
+    // normalize time to midnight to avoid DST issues
+    cur.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    while (cur < end) {
+      arr.push(formatDateInt(new Date(cur)));
+      cur.setDate(cur.getDate() + 1);
+    }
+    return arr;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBookingConfirmed(true);
+    setErrorMsg(null);
+    setSubmitting(true);
 
-    // Store booking to localStorage (can replace with API later)
-    const booking = {
-      id: Math.random().toString(36).substr(2, 9),
-      hotelId,
-      hotelName: hotelNames[hotelId],
-      roomId,
-      ...formData,
-      totalPrice: roomPrices[hotelId] * calculateNights(),
-      createdAt: new Date().toLocaleDateString("vi-VN"),
+    const nights = calculateNights();
+
+    const reservationPayload = {
+      listingId: listingKey,
+      userId: localStorage.getItem("userId") || "", // pass empty -> server action will create guest if needed
+      startDate: formData.checkIn ? new Date(formData.checkIn) : new Date(),
+      endDate: formData.checkOut ? new Date(formData.checkOut) : new Date(),
+      chargeId: `local_${Math.random().toString(36).substr(2, 9)}`,
+      daysDifference: nights,
+      reservedDates: getReservedDates(formData.checkIn, formData.checkOut),
+      specialRequests: formData.specialRequests || null,
     };
 
-    const bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
-    bookings.push(booking);
-    localStorage.setItem("bookings", JSON.stringify(bookings));
+    try {
+      // call server action to persist reservation and decrement roomsAvailable atomically
+      await createReservation(reservationPayload);
+      setBookingConfirmed(true);
+      setSubmitting(false);
 
-    setTimeout(() => {
-      window.location.href = "/dashboard/bookings";
-    }, 2000);
+      setTimeout(() => {
+        window.location.href = "/dashboard/bookings";
+      }, 2000);
+    } catch (err: unknown) {
+      console.error("Reservation error:", err);
+      const errMsg =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Đã xảy ra lỗi khi lưu đặt phòng";
+      setErrorMsg(errMsg);
+      setSubmitting(false);
+    }
   };
 
   const calculateNights = () => {
@@ -75,7 +124,7 @@ export default function BookingPage({
   };
 
   const nights = calculateNights();
-  const totalPrice = nights > 0 ? roomPrices[hotelId] * nights : 0;
+  const totalPrice = nights > 0 ? pricePerNight * nights : 0;
 
   if (bookingConfirmed) {
     return (
@@ -97,7 +146,7 @@ export default function BookingPage({
       <DashboardHeader />
       <div className="container mx-auto px-4 py-8">
         <Link
-          href={`/dashboard/hotel/${hotelId}`}
+          href={`/dashboard/listing/${listingKey}`}
           className="text-primary hover:underline mb-6 inline-block"
         >
           ← Quay lại
@@ -108,9 +157,7 @@ export default function BookingPage({
           <div className="lg:col-span-2">
             <div className="bg-card border border-border rounded-lg p-8">
               <h1 className="text-3xl font-bold mb-2">Hoàn tất đặt phòng</h1>
-              <p className="text-muted-foreground mb-8">
-                {hotelNames[hotelId]}
-              </p>
+              <p className="text-muted-foreground mb-8">{hotelName}</p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Check-in/Check-out */}
@@ -238,11 +285,16 @@ export default function BookingPage({
                   />
                 </div>
 
+                {errorMsg && (
+                  <div className="text-sm text-red-600">{errorMsg}</div>
+                )}
+
                 <Button
                   type="submit"
+                  disabled={submitting}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg"
                 >
-                  Xác nhận và thanh toán
+                  {submitting ? "Đang xử lý..." : "Xác nhận và thanh toán"}
                 </Button>
               </form>
             </div>
@@ -256,7 +308,7 @@ export default function BookingPage({
               <div className="space-y-3 pb-4 border-b border-border">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Khách sạn</span>
-                  <span className="font-medium">{hotelNames[hotelId]}</span>
+                  <span className="font-medium">{hotelName}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Check-in</span>
@@ -272,7 +324,7 @@ export default function BookingPage({
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Giá/đêm</span>
-                  <span>{roomPrices[hotelId].toLocaleString("vi-VN")} ₫</span>
+                  <span>{pricePerNight.toLocaleString("vi-VN")} ₫</span>
                 </div>
               </div>
 

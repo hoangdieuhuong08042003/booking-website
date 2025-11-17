@@ -88,23 +88,6 @@ model Authenticator {
 // Booking models
 // ========================
 
-// Tỉnh / Thành phố
-model Province {
-  id        Int       @id
-  name      String
-  districts District[]
-  listings  Listing[]
-}
-
-// Quận / Huyện
-model District {
-  id         Int       @id
-  name       String
-  provinceId Int
-  province   Province  @relation(fields: [provinceId], references: [id])
-  listings   Listing[]
-}
-
 // Tiện nghi
 model Amenity {
   id        String     @id @default(cuid())
@@ -124,23 +107,55 @@ model ListingAmenity {
   @@unique([listingId, amenityId])
 }
 
+// Province / Tỉnh - cache from external API
+model Province {
+  id        Int       @id
+  name      String
+  districts District[]
+  listings  Listing[]
+}
+
+// District / Quận - thuộc Province
+model District {
+  id         Int       @id
+  name       String
+  provinceId Int
+  province   Province  @relation(fields: [provinceId], references: [id], onDelete: Cascade)
+  wards      Ward[]
+  listings   Listing[]
+}
+
+// Ward / Phường - thuộc District
+model Ward {
+  id         Int     @id
+  name       String
+  districtId Int
+  district   District @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  listings   Listing[]
+}
+
 // Listing
 model Listing {
   id            String     @id @default(cuid())
   name          String
-  type          String     // Hotel, Homestay, Resort...
+  type          String
   desc          String
   pricePerNight Float
   beds          Int
+  // new field: number of rooms currently available
+  roomsAvailable Int       @default(0)
   imageUrls     String[]
-  thumbnail     String    
+  thumbnail     String
   hasFreeWifi   Boolean    @default(false)
 
+  // store FK ids and relations to cached Province/District/Ward
   provinceId Int?
   districtId Int?
+  wardId     Int?
 
-  province   Province? @relation(fields: [provinceId], references: [id])
-  district   District? @relation(fields: [districtId], references: [id])
+  province Province? @relation(fields: [provinceId], references: [id])
+  district District? @relation(fields: [districtId], references: [id])
+  ward     Ward?     @relation(fields: [wardId], references: [id])
 
   // new: average rating computed from related Review.stars (stored value)
   avgRating    Float      @default(0)
@@ -158,6 +173,12 @@ model Reservation {
   chargeId      String
   daysDifference Int
   reservedDates Int[]     @default([])
+
+  // thêm trường để lưu "Yêu cầu đặc biệt"
+  specialRequests String?
+
+  // new: reservation status
+  status ReservationStatus @default(ACTIVE)
 
   listingId String
   userId    String
@@ -179,4 +200,11 @@ model Review {
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ReservationStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+  BLOCKED
 }

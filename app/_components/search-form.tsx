@@ -34,11 +34,14 @@ export function SearchForm({ onSearch }: SearchFormProps) {
   useEffect(() => {
     let mounted = true;
     setLoadingProvinces(true);
-    fetch("https://vapi.vnappmob.com/api/v2/province/")
+
+    // changed: call internal API route instead of external vapi
+    fetch("/api/provinces")
       .then((res) => res.json())
       .then((data) => {
         if (!mounted) return;
-        const results = data?.results || data?.provinces || [];
+        // Expect server to return { provinces: [...] } with province_id & province_name
+        const results = data?.provinces || [];
         setProvinces(results);
       })
       .catch(() => {
