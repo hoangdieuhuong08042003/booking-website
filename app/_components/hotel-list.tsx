@@ -84,28 +84,30 @@ export function HotelList({
               className="border border-border rounded-lg overflow-hidden bg-card"
             >
               <div className="relative h-48 w-full bg-muted">
-                <Skeleton className="h-full w-full" />
+                {/* thêm bg-gray-200 cho skeleton (màu xám nhạt) */}
+                <Skeleton className="h-full w-full bg-gray-200" />
               </div>
 
               <div className="p-4">
-                <Skeleton className="h-6 w-3/4 mb-3" />
+                {/* tiêu đề skeleton */}
+                <Skeleton className="h-6 w-3/4 mb-3 bg-gray-200" />
 
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-4 w-1/3 bg-gray-200" />
                 </div>
 
                 <div className="flex items-center gap-2 mb-4">
-                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-4 w-12 bg-gray-200" />
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Skeleton className="h-6 w-20" />
-                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20 bg-gray-200" />
+                  <Skeleton className="h-6 w-20 bg-gray-200" />
                 </div>
 
                 <div className="flex items-end justify-between">
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-9 w-28" />
+                  <Skeleton className="h-5 w-24 bg-gray-200" />
+                  <Skeleton className="h-9 w-28 bg-gray-200" />
                 </div>
               </div>
             </div>

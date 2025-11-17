@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SearchForm } from "../_components/search-form";
+import { SearchForm, type SearchFormData } from "../_components/search-form";
 import { HotelList } from "../_components/hotel-list";
 import type { Listing } from "@prisma/client"; // type-only import
 
@@ -13,10 +13,33 @@ export default function DashboardClient({
   const [searchResults, setSearchResults] = useState<Listing[]>([]);
   const [isSearched, setIsSearched] = useState(false);
 
-  const handleSearch = (formData: any) => {
-    // temporary behavior: use server-provided initial listings as results
-    setSearchResults(initialListings);
+  // added loading state
+  const [isLoading, setIsLoading] = useState(false);
+
+  // replaced temporary handler with real API call, typed properly
+  const handleSearch = async (formData: SearchFormData) => {
     setIsSearched(true);
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/search-listings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Search request failed");
+      }
+
+      const data = await res.json();
+      setSearchResults(data || []);
+    } catch (err) {
+      console.error("Search error:", err);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -25,6 +48,7 @@ export default function DashboardClient({
       <HotelList
         hotels={isSearched ? searchResults : initialListings}
         title={isSearched ? undefined : "Khách sạn nổi bật"}
+        isLoading={isLoading}
       />
     </div>
   );

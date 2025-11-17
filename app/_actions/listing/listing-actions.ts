@@ -103,7 +103,86 @@ async function getNewestListings() {
   return listings;
 }
 
+async function searchListings({
+  provinceId,
+  districtId,
+  startDate,
+  endDate,
+  numGuests,
+  minPrice,
+  maxPrice,
+  type,
+  selectedAmenities = [],
+}: {
+  provinceId?: number;
+  districtId?: number;
+  startDate?: Date;
+  endDate?: Date;
+  numGuests?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  type?: string;
+  selectedAmenities?: string[];
+}) {
+  // Tính số giường tối thiểu dựa trên numGuests (1 bed = 2 người)
+  let minBeds: number | undefined;
+  if (numGuests) {
+    minBeds = Math.ceil(numGuests / 2);
+  }
+
+  return prisma.listing.findMany({
+    where: {
+      provinceId: provinceId ?? undefined,
+      districtId: districtId ?? undefined,
+      beds: minBeds ? { gte: minBeds } : undefined,
+      type: type ?? undefined,
+      pricePerNight:
+        minPrice !== undefined || maxPrice !== undefined
+          ? { gte: minPrice ?? 0, lte: maxPrice ?? 999999999 }
+          : undefined,
+      amenities: selectedAmenities.length
+        ? { every: { amenity: { name: { in: selectedAmenities } } } }
+        : undefined,
+      // Chỉ hiển thị nếu không có reservation trùng ngày
+      reservations:
+        startDate && endDate
+          ? {
+              none: {
+                OR: [
+                  {
+                    startDate: { lte: endDate },
+                    endDate: { gte: startDate },
+                  },
+                ],
+              },
+            }
+          : undefined,
+    },
+    include: {
+      province: true,
+      district: true,
+      amenities: { include: { amenity: true } },
+    },
+    orderBy: { avgRating: "desc" },
+    take: 20,
+  });
+}
+
+async function getListingById(listingId: string) {
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    include: {
+      province: true,
+      district: true,
+      amenities: { include: { amenity: true } },
+    },
+  });
+  return listing;
+}
+
 export {
   createListing,
   getNewestListings,
+  searchListings,
+  getListingById,
 };
