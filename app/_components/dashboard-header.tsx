@@ -1,23 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { UserButton } from "./user-button";
 
 export function DashboardHeader() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
-  const handleLogout = async () => {
-    setLoading(true);
-
-    await signOut();
-    router.push("/");
-    setLoading(false);
-  };
-
   return (
     <header className="border-b border-border bg-background sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -31,18 +18,11 @@ export function DashboardHeader() {
           <Link href="/dashboard">
             <Button variant="ghost">Tìm kiếm</Button>
           </Link>
-          <Link href="/dashboard/bookings">
+          <Link href="/dashboard/mybookings">
             <Button variant="ghost">Booking của tôi</Button>
           </Link>
-          <Button variant="ghost">Hồ sơ</Button>
-          <Button
-            variant="ghost"
-            className="text-destructive"
-            onClick={handleLogout}
-            disabled={loading}
-          >
-            Đăng xuất
-          </Button>
+
+          <UserButton />
         </div>
       </div>
     </header>
