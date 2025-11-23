@@ -173,6 +173,9 @@ model Reservation {
   chargeId      String
   daysDifference Int
   reservedDates Int[]     @default([])
+  // store phone as string to preserve formatting, leading zeros, country codes
+  phone String
+  
 
   // thêm trường để lưu "Yêu cầu đặc biệt"
   specialRequests String?
@@ -180,6 +183,9 @@ model Reservation {
   // new: reservation status
   status ReservationStatus @default(ACTIVE)
 
+  // new: tổng tiền cho reservation (đơn vị: VND hoặc ứng với ứng dụng)
+  totalPrice Float @default(0)
+  
   listingId String
   userId    String
 

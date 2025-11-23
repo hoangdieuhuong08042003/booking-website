@@ -7,16 +7,22 @@ import { AlertCircle } from "lucide-react";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import { createReservation } from "@/app/_actions/reservation/reservation-actions";
 import { useSession } from "next-auth/react";
+import { useSearchParams, useParams } from "next/navigation";
 
-export default function BookingPage({
-  params,
-}: {
-  // params may be a direct object or a Promise that resolves to the object
-  params: { listingId: string } | Promise<{ listingId: string }>;
-  searchParams: { roomId?: string };
-}) {
-  // <-- changed: unwrap params correctly in client component
-  const listingParam = (params as { listingId: string }).listingId;
+export default function BookingPage() {
+  // read dynamic segment + query params from client router
+  const params = useParams() as { listingId?: string };
+  const searchParams = useSearchParams();
+  const listingId = params?.listingId ?? "unknown";
+
+  const rawPrice = searchParams?.get("price");
+  const rawName = searchParams?.get("name");
+
+  const pricePerNight = rawPrice ? Number(rawPrice) : 2000000; // fallback
+  const hotelName = rawName
+    ? decodeURIComponent(rawName)
+    : `Khách sạn ${listingId}`;
+
   const { data: session } = useSession();
 
   const [formData, setFormData] = useState({
@@ -34,40 +40,14 @@ export default function BookingPage({
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Support lookup by slug or numeric id (as string). Add/extend entries as needed.
-  const hotelNames: { [key: string]: string } = {
-    "1": "Hôtel Métropole Hà Nội",
-    "2": "Riverside Resort Hội An",
-    "3": "Phu Quoc Paradise",
-    // add known slugs here
-    "dn-family-villa": "DN Family Villa",
-  };
+  const formatDateInt = (d: Date) =>
+    parseInt(d.toISOString().slice(0, 10).replace(/-/g, ""));
 
-  const roomPrices: { [key: string]: number } = {
-    "1": 2500000,
-    "2": 1800000,
-    "3": 2200000,
-    // add known slugs here
-    "dn-family-villa": 2000000,
-  };
-
-  // Determine effective key: prefer slug (raw param). If it's numeric string, that will still work.
-  const listingKey = listingParam;
-  const hotelName = hotelNames[listingKey] ?? `Khách sạn ${listingParam}`;
-  const pricePerNight = roomPrices[listingKey] ?? 2000000; // fallback price
-
-  // Helper: format Date -> YYYYMMDD as number (Int[])
-  const formatDateInt = (d: Date) => {
-    return parseInt(d.toISOString().slice(0, 10).replace(/-/g, ""));
-  };
-
-  // Helper: generate reserved dates from checkIn (inclusive) to checkOut (exclusive)
   const getReservedDates = (checkInStr: string, checkOutStr: string) => {
     if (!checkInStr || !checkOutStr) return [] as number[];
     const arr: number[] = [];
     const cur = new Date(checkInStr);
     const end = new Date(checkOutStr);
-    // normalize time to midnight to avoid DST issues
     cur.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
     while (cur < end) {
@@ -77,31 +57,58 @@ export default function BookingPage({
     return arr;
   };
 
+  const calculateNights = () => {
+    if (!formData.checkIn || !formData.checkOut) return 0;
+    const check_in = new Date(formData.checkIn);
+    const check_out = new Date(formData.checkOut);
+    return Math.ceil(
+      (check_out.getTime() - check_in.getTime()) / (1000 * 60 * 60 * 24)
+    );
+  };
+
+  const nights = calculateNights();
+  const totalPrice = nights > 0 ? pricePerNight * nights : 0;
+
+  useEffect(() => {
+    if (!session?.user) return;
+    const name = session.user.name ?? "";
+    const parts = name.trim().split(/\s+/);
+    const first = parts.length ? parts[0] : "";
+    const last = parts.length > 1 ? parts.slice(1).join(" ") : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      firstName: prev.firstName || first,
+      lastName: prev.lastName || last,
+      email: prev.email || session.user.email || "",
+      phone: prev.phone,
+    }));
+  }, [session]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSubmitting(true);
 
-    const nights = calculateNights();
+    const nightsCount = calculateNights();
 
     const reservationPayload = {
-      listingId: listingKey,
-      // <-- changed: prefer authenticated user id if available
+      listingId: listingId,
       userId: session?.user?.id ?? "",
       startDate: formData.checkIn ? new Date(formData.checkIn) : new Date(),
       endDate: formData.checkOut ? new Date(formData.checkOut) : new Date(),
       chargeId: `local_${Math.random().toString(36).substr(2, 9)}`,
-      daysDifference: nights,
+      daysDifference: nightsCount,
       reservedDates: getReservedDates(formData.checkIn, formData.checkOut),
       specialRequests: formData.specialRequests || null,
+      phone: formData.phone,
+      totalPrice: totalPrice,
     };
 
     try {
-      // call server action to persist reservation and decrement roomsAvailable atomically
       await createReservation(reservationPayload);
       setBookingConfirmed(true);
       setSubmitting(false);
-
       setTimeout(() => {
         window.location.href = "/dashboard/mybookings";
       }, 2000);
@@ -117,38 +124,6 @@ export default function BookingPage({
       setSubmitting(false);
     }
   };
-
-  const calculateNights = () => {
-    if (!formData.checkIn || !formData.checkOut) return 0;
-    const check_in = new Date(formData.checkIn);
-    const check_out = new Date(formData.checkOut);
-    return Math.ceil(
-      (check_out.getTime() - check_in.getTime()) / (1000 * 60 * 60 * 24)
-    );
-  };
-
-  const nights = calculateNights();
-  const totalPrice = nights > 0 ? pricePerNight * nights : 0;
-
-  // Prefill customer info from next-auth session (if available)
-  useEffect(() => {
-    if (!session?.user) return;
-    const name = session.user.name ?? "";
-    const parts = name.trim().split(/\s+/);
-    const first = parts.length ? parts[0] : "";
-    const last = parts.length > 1 ? parts.slice(1).join(" ") : "";
-
-    setFormData((prev) => ({
-      ...prev,
-      // only fill when the field is currently empty to avoid overwriting user edits
-      firstName: prev.firstName || first,
-      lastName: prev.lastName || last,
-      email: prev.email || session.user.email || "",
-      // NOTE: do not attempt to read session.user.phone — phone isn't provided in session
-      // phone stays as prev.phone so we don't overwrite or reference a nonexistent field
-      phone: prev.phone,
-    }));
-  }, [session]);
 
   if (bookingConfirmed) {
     return (
@@ -170,7 +145,7 @@ export default function BookingPage({
       <DashboardHeader />
       <div className="container mx-auto px-4 py-8">
         <Link
-          href={`/dashboard/listing/${listingKey}`}
+          href={`/dashboard/listing/${listingId}`}
           className="text-primary hover:underline mb-6 inline-block"
         >
           ← Quay lại

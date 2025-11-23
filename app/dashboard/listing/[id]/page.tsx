@@ -147,7 +147,13 @@ export default async function HotelDetailPage({
                     </div>
                   </div>
 
-                  <Link href={`/dashboard/booking/${listing.id}`}>
+                  <Link
+                    href={`/dashboard/booking/${
+                      listing.id
+                    }?price=${encodeURIComponent(
+                      String(listing.pricePerNight)
+                    )}&name=${encodeURIComponent(String(listing.name))}`}
+                  >
                     <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-4 lg:py-6 text-lg lg:text-xl rounded">
                       Tiếp tục đặt phòng
                     </button>

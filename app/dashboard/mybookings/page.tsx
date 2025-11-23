@@ -1,6 +1,6 @@
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import Link from "next/link";
-import { Calendar, Users } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { getBookingsByUser } from "@/app/_actions/reservation/reservation-actions";
 import { getUserId } from "@/app/_actions/user/get-user";
 import type { Reservation } from "@prisma/client";
@@ -91,7 +91,7 @@ export default async function BookingsPage() {
                       Tổng tiền
                     </p>
                     <p className="text-2xl font-bold text-accent">
-                      {booking.status}
+                      {booking.totalPrice.toLocaleString("vi-VN")} ₫
                     </p>
                   </div>
                 </div>
