@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBookingById } from "@/app/_actions/reservation/reservation-actions";
 import BookingDetailClient from "./booking-detail-client";
+import ReviewPrompt from "./review-prompt";
 
 export default async function BookingDetailPage({
   params,
@@ -28,6 +29,7 @@ export default async function BookingDetailPage({
           </Link>
         </div>
         <BookingDetailClient booking={booking} />
+        <ReviewPrompt booking={booking} />
       </div>
     </main>
   );

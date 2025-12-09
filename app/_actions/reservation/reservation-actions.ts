@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getUserId } from "@/app/_actions/user/get-user";
 import { Reservation, ReservationStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 async function updateExpiredReservations(): Promise<void> {
   // mark ACTIVE reservations with endDate < today as COMPLETED and free rooms atomically
@@ -269,30 +270,20 @@ async function getBookingsByUser(userId: string): Promise<(Reservation & { listi
  * Fetch a single booking by ID with full listing details.
  * Returns null if not found or user doesn't have access.
  */
-async function getBookingById(reservationId: string): Promise<
-  | (Reservation & {
-      listing: {
-        name: string;
-        type: string;
-        desc: string;
-        pricePerNight: number;
-        beds: number;
-        roomsAvailable: number;
-        imageUrls: string[];
-        thumbnail: string;
-        hasFreeWifi: boolean;
-        avgRating: number;
-        roomType: { name: string } | null;
-        province: { name: string } | null;
-        ward: { name: string } | null;
-      } | null;
-      user: {
-        name: string | null;
-        email: string;
+type BookingWithListingAndUser = Prisma.ReservationGetPayload<{
+  include: {
+    listing: {
+      include: {
+        roomType: { select: { name: true } };
+        province: { select: { name: true } };
+        ward: { select: { name: true } };
       };
-    })
-  | null
-> {
+    };
+    user: { select: { name: true; email: true } };
+  };
+}>;
+
+async function getBookingById(reservationId: string): Promise<BookingWithListingAndUser | null> {
   await updateExpiredReservations();
 
   const userId = await getUserId();
@@ -301,7 +292,7 @@ async function getBookingById(reservationId: string): Promise<
   const booking = await prisma.reservation.findFirst({
     where: {
       id: reservationId,
-      userId, // ensure user can only view their own bookings
+      userId,
     },
     include: {
       listing: {

@@ -4,7 +4,6 @@ import {
   Calendar,
   MapPin,
   Bed,
-  Wifi,
   Star,
   Phone,
   FileText,
@@ -23,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import ReviewPrompt from "./review-prompt";
 
 const statusTranslations = {
   ACTIVE: "Đang hoạt động",
@@ -44,11 +44,11 @@ export default function BookingDetailClient({
       roomsAvailable: number;
       imageUrls: string[];
       thumbnail: string;
-      hasFreeWifi: boolean;
+
       avgRating: number;
       roomType: { name: string } | null;
       province: { name: string } | null;
-      district: { name: string } | null;
+      ward: { name: string } | null;
     } | null;
     user: {
       name: string | null;
@@ -60,6 +60,9 @@ export default function BookingDetailClient({
   const [loading, setLoading] = useState(false);
   const [cancelled, setCancelled] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
+  // State để mở dialog review
+  const [openReview, setOpenReview] = useState(false);
 
   const statusColors = {
     ACTIVE: "bg-green-100 text-green-800",
@@ -119,6 +122,20 @@ export default function BookingDetailClient({
         </div>
       </div>
 
+      {/* Guest Information */}
+      <div className="p-6 border-b border-border">
+        <h2 className="text-xl font-semibold mb-4">Thông tin khách hàng</h2>
+        <div className="space-y-2">
+          <p>
+            <span className="font-medium">Tên:</span>{" "}
+            {booking.user.name ?? "N/A"}
+          </p>
+          <p>
+            <span className="font-medium">Email:</span> {booking.user.email}
+          </p>
+        </div>
+      </div>
+
       {/* Listing Information */}
       <div className="p-6 border-b border-border">
         <h2 className="text-xl font-semibold mb-4">Thông tin khách sạn</h2>
@@ -141,8 +158,7 @@ export default function BookingDetailClient({
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="w-4 h-4" />
               <span>
-                {booking.listing?.district?.name},{" "}
-                {booking.listing?.province?.name}
+                {booking.listing?.ward?.name}, {booking.listing?.province?.name}
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -150,12 +166,7 @@ export default function BookingDetailClient({
                 <Bed className="w-4 h-4 text-accent" />
                 <span>{booking.listing?.beds} giường</span>
               </div>
-              {booking.listing?.hasFreeWifi && (
-                <div className="flex items-center gap-2">
-                  <Wifi className="w-4 h-4 text-accent" />
-                  <span>WiFi miễn phí</span>
-                </div>
-              )}
+
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                 <span>{booking.listing?.avgRating.toFixed(1)}</span>
@@ -274,20 +285,6 @@ export default function BookingDetailClient({
         </div>
       </div>
 
-      {/* Guest Information */}
-      <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-semibold mb-4">Thông tin khách hàng</h2>
-        <div className="space-y-2">
-          <p>
-            <span className="font-medium">Tên:</span>{" "}
-            {booking.user.name ?? "N/A"}
-          </p>
-          <p>
-            <span className="font-medium">Email:</span> {booking.user.email}
-          </p>
-        </div>
-      </div>
-
       {/* Cancel Booking Section */}
       {booking.status === "ACTIVE" && (
         <div className="p-6 border-t border-border bg-orange-50">
@@ -310,6 +307,30 @@ export default function BookingDetailClient({
             <p className="text-sm text-gray-600 mt-2">
               Chỉ có thể hủy đặt phòng trong vòng 24 giờ kể từ khi đặt.
             </p>
+          )}
+        </div>
+      )}
+
+      {/* Button viết review */}
+      {booking.status === "COMPLETED" && (
+        <div className="p-6 border-t border-border bg-blue-50 flex justify-end">
+          <Button
+            variant="default"
+            size="lg"
+            onClick={() => setOpenReview(true)}
+          >
+            Viết đánh giá
+          </Button>
+          {/* Dialog viết review */}
+          {openReview && (
+            <ReviewPrompt
+              booking={{
+                id: booking.id,
+                status: booking.status,
+              }}
+              open={openReview}
+              setOpen={setOpenReview}
+            />
           )}
         </div>
       )}
