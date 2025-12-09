@@ -25,10 +25,11 @@ export default function DashboardClient({
 
   const [searchTriggered, setSearchTriggered] = useState(false);
 
+  // Pagination state
+  const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 12;
-  const pageIndex = 0;
 
-  // Query for listings with filters
+  // Query for listings with filters and pagination
   const { data: listingsData, isLoading } = useQuery({
     queryKey: [
       "listings",
@@ -38,6 +39,8 @@ export default function DashboardClient({
       filters.roomTypeId,
       filters.priceRange,
       filters.selectedAmenities,
+      pageIndex,
+      pageSize,
     ],
     queryFn: () =>
       getListingByFilter({
@@ -57,7 +60,16 @@ export default function DashboardClient({
     enabled: searchTriggered, // Only run the query if search has been triggered
   });
 
-  const listings = listingsData ?? initialListings;
+  // listingsData can be either array or { listings, total }
+  const listings = Array.isArray(listingsData)
+    ? listingsData
+    : listingsData?.listings ?? initialListings;
+  const totalHotels =
+    typeof listingsData?.total === "number"
+      ? listingsData.total
+      : Array.isArray(listingsData)
+      ? listingsData.length
+      : initialListings.length;
 
   // Called when filter values change, but does NOT trigger search
   const handleFilterChange = (data: FilterData) => {
@@ -68,6 +80,12 @@ export default function DashboardClient({
   const handleSearch = (data: FilterData) => {
     setFilters(data);
     setSearchTriggered(true);
+    setPageIndex(0); // Reset to first page on new search
+  };
+
+  // Pagination handler
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
   };
 
   return (
@@ -82,6 +100,10 @@ export default function DashboardClient({
             hotels={listings}
             title={listings.length > 0 ? undefined : "Khách sạn nổi bật"}
             isLoading={isLoading}
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            totalHotels={totalHotels}
           />
         </div>
       </div>

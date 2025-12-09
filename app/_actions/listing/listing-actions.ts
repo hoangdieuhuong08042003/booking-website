@@ -256,6 +256,9 @@ async function getListingByFilter({
       : {}),
   };
 
+  // Get total count for pagination
+  const total = await prisma.listing.count({ where });
+
   const listings = await prisma.listing.findMany({
     where,
     orderBy: { avgRating: "desc" },
@@ -290,7 +293,7 @@ async function getListingByFilter({
     },
   });
 
-  return listings;
+  return { listings, total };
 }
 
 /**

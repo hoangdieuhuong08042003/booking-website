@@ -49,10 +49,8 @@ export function HotelList({
   const currentPage =
     typeof onPageChange === "function" ? pageIndex : internalPage;
 
-  // ensure we only show the hotels for the current page (max pageSize items)
-  const start = currentPage * pageSize;
-  const end = start + pageSize;
-  const displayedHotels = hotels.slice(start, end);
+  // Remove local slicing: hotels are already paged from backend
+  const displayedHotels = hotels;
 
   // If totalHotels provided use it, otherwise fall back to hotels.length.
   const effectiveTotal =
