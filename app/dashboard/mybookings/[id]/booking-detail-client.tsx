@@ -14,6 +14,15 @@ import Image from "next/image";
 import { useState } from "react";
 import { cancelReservation } from "@/app/_actions/reservation/reservation-actions";
 import { Reservation } from "@prisma/client";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const statusTranslations = {
   ACTIVE: "Đang hoạt động",
@@ -50,6 +59,7 @@ export default function BookingDetailClient({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cancelled, setCancelled] = useState(false);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
   const statusColors = {
     ACTIVE: "bg-green-100 text-green-800",
@@ -78,6 +88,7 @@ export default function BookingDetailClient({
     try {
       await cancelReservation(booking.id);
       setCancelled(true);
+      setOpenConfirmDialog(false);
     } catch (err) {
       setError(
         err instanceof Error
@@ -280,18 +291,20 @@ export default function BookingDetailClient({
       {/* Cancel Booking Section */}
       {booking.status === "ACTIVE" && (
         <div className="p-6 border-t border-border bg-orange-50">
-          <h2 className="text-lg font-semibold mb-4">Hủy đặt phòng</h2>
-          {error && <p className="text-red-500 mb-4">{error}</p>}
+          {error && <p className="text-red-500 mb-4 ">{error}</p>}
           {cancelled ? (
             <p className="text-green-600">Đặt phòng đã được hủy thành công.</p>
           ) : (
-            <button
-              onClick={handleCancel}
-              disabled={loading || !canCancelWithin24Hours()}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {loading ? "Đang xử lý..." : "Hủy đặt phòng"}
-            </button>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setOpenConfirmDialog(true)}
+                disabled={!canCancelWithin24Hours()}
+                variant="destructive"
+                size="lg"
+              >
+                Hủy đặt phòng
+              </Button>
+            </div>
           )}
           {!canCancelWithin24Hours() && (
             <p className="text-sm text-gray-600 mt-2">
@@ -300,6 +313,35 @@ export default function BookingDetailClient({
           )}
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <Dialog open={openConfirmDialog} onOpenChange={setOpenConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận hủy đặt phòng</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn hủy đặt phòng này không? Hành động này không
+              thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => setOpenConfirmDialog(false)}
+              variant="outline"
+              disabled={loading}
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              onClick={handleCancel}
+              variant="destructive"
+              disabled={loading}
+            >
+              {loading ? "Đang xử lý..." : "Xác nhận hủy"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
