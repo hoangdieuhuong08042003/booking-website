@@ -1,9 +1,9 @@
-import { Amenity, PrismaClient, Prisma } from "@prisma/client";
+import { Amenity, PrismaClient, Prisma, RoomType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 // -----------------------------
-// 1) Seed provinces/districts
+// 1) Seed provinces/districts/wards
 // -----------------------------
 async function fetchAndSeedGeo() {
   const count = await prisma.province.count();
@@ -12,40 +12,49 @@ async function fetchAndSeedGeo() {
     return;
   }
 
-  console.log("🌍 Fetching provinces/districts and caching to DB...");
+  console.log("🌍 Fetching provinces/districts/wards and caching to DB...");
 
-  // Fetch provinces
+  // --- Fetch Provinces ---
   const provRes = await fetch("https://vapi.vnappmob.com/api/v2/province/");
   const provJson = await provRes.json();
   const provinces = provJson.results ?? provJson.data ?? [];
 
   for (const p of provinces) {
-    const id = Number(p.province_id ?? p.provinceId ?? p.id);
-    const name = p.province_name ?? p.provinceName ?? p.name;
-    if (!id || !name) continue;
+    const provinceId = Number(p.province_id);
+    if (!provinceId) continue;
 
-    await prisma.province.create({ data: { id, name } });
+    await prisma.province.create({
+      data: { id: provinceId, name: p.province_name },
+    });
 
-    // Fetch districts
-    try {
-      const distRes = await fetch(`https://vapi.vnappmob.com/api/v2/province/district/${id}`);
-      const distJson = await distRes.json();
-      const districts = distJson.results ?? distJson.data ?? [];
+    console.log(`🏙 Seeded province ${p.province_name}`);
 
-      for (const d of districts) {
-        const did = Number(d.district_id ?? d.districtId ?? d.id);
-        const dname = d.district_name ?? d.districtName ?? d.name;
-        if (!did || !dname) continue;
+    // --- Fetch Districts ---
+    const distRes = await fetch(
+      `https://vapi.vnappmob.com/api/v2/province/district/${provinceId}`
+    );
+    const distJson = await distRes.json();
+    const districts = distJson.results ?? distJson.data ?? [];
 
-        await prisma.district.create({ data: { id: did, name: dname, provinceId: id } });
-      }
-    } catch (err) {
-      console.warn(`Failed fetching districts for province ${id}:`, err);
+    for (const d of districts) {
+      const districtId = Number(d.district_id);
+      if (!districtId) continue;
+
+      await prisma.district.create({
+        data: {
+          id: districtId,
+          name: d.district_name,
+          provinceId,
+        },
+      });
+
+      console.log(`  🏘 Seeded district ${d.district_name}`);
     }
   }
 
-  console.log("🌍 Geo cache complete.");
+  console.log("🎉 Geo caching complete!");
 }
+
 
 // -----------------------------
 // 2) Seed amenities
@@ -78,10 +87,42 @@ async function seedAmenities(): Promise<Amenity[]> {
 }
 
 // -----------------------------
+// 2.1) Seed room types
+// -----------------------------
+async function seedRoomTypes(): Promise<RoomType[]> {
+  const roomTypes = [
+    { name: "Hotel", desc: "Khách sạn tiêu chuẩn" },
+    { name: "Homestay", desc: "Nhà ở địa phương" },
+    { name: "Apartment", desc: "Căn hộ" },
+    { name: "Villa", desc: "Biệt thự" },
+    { name: "Resort", desc: "Khu nghỉ dưỡng" },
+    { name: "Cabin", desc: "Nhà gỗ nhỏ" },
+    { name: "Boutique Hotel", desc: "Khách sạn boutique" },
+    { name: "Suite", desc: "Phòng suite cao cấp" },
+    { name: "Hostel", desc: "Nhà nghỉ tập thể" },
+    { name: "Condo", desc: "Chung cư" },
+    { name: "Ecolodge", desc: "Nhà nghỉ sinh thái" },
+  ];
+  const records: RoomType[] = [];
+  for (const rt of roomTypes) {
+    const rec = await prisma.roomType.upsert({
+      where: { name: rt.name },
+      update: {},
+      create: rt,
+    });
+    records.push(rec);
+  }
+  return records;
+}
+
+// -----------------------------
 // 3) Seed listings
 // -----------------------------
-async function seedListings(amenityRecords: Amenity[]) {
-    // 4) LISTINGS (VIỆT NAM)
+async function seedListings(
+  amenityRecords: Amenity[],
+  roomTypeRecords: RoomType[]
+) {
+  // 4) LISTINGS (VIỆT NAM)
   // --------------------------------------
   const listingsData = [
     {
@@ -97,10 +138,8 @@ async function seedListings(amenityRecords: Amenity[]) {
         "https://source.unsplash.com/random/800x600?room",
       ],
       thumbnail:
-        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       hasFreeWifi: true,
-      provinceId: 1,
-      districtId: 1,
       avgRating: 4.5,
     },
 
@@ -117,10 +156,8 @@ async function seedListings(amenityRecords: Amenity[]) {
         "https://source.unsplash.com/random/800x600?hotel-luxury",
       ],
       thumbnail:
-        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       hasFreeWifi: true,
-      provinceId: 2,
-      districtId: 3,
       avgRating: 4.2,
     },
 
@@ -137,10 +174,8 @@ async function seedListings(amenityRecords: Amenity[]) {
         "https://source.unsplash.com/random/800x600?beach",
       ],
       thumbnail:
-        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       hasFreeWifi: true,
-      provinceId: 3,
-      districtId: 6,
       avgRating: 4.8,
     },
 
@@ -157,10 +192,8 @@ async function seedListings(amenityRecords: Amenity[]) {
         "https://source.unsplash.com/random/800x600?dalat",
       ],
       thumbnail:
-        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       hasFreeWifi: true,
-      provinceId: 4,
-      districtId: 7,
       avgRating: 4.7,
     },
 
@@ -177,10 +210,8 @@ async function seedListings(amenityRecords: Amenity[]) {
         "https://source.unsplash.com/random/800x600?hotel-sea",
       ],
       thumbnail:
-        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       hasFreeWifi: true,
-      provinceId: 5,
-      districtId: 8,
       avgRating: 4.3,
     },
 
@@ -196,11 +227,8 @@ async function seedListings(amenityRecords: Amenity[]) {
         "https://source.unsplash.com/random/800x600?halong",
         "https://source.unsplash.com/random/800x600?resort-view",
       ],
-      // fixed malformed URL
       thumbnail: "https://source.unsplash.com/random/800x600?halong-resort",
       hasFreeWifi: true,
-      provinceId: 6,
-      districtId: 9,
       avgRating: 4.9,
     },
     {
@@ -218,8 +246,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: true,
-      provinceId: 1,
-      districtId: 2,
       avgRating: 4.4,
     },
     {
@@ -237,8 +263,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1505691723518-36a1219e0e19?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: true,
-      provinceId: 2,
-      districtId: 3,
       avgRating: 4.6,
     },
     {
@@ -256,8 +280,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1501117716987-c8e097e8a6e7?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: true,
-      provinceId: 3,
-      districtId: 5,
       avgRating: 4.5,
     },
     {
@@ -275,8 +297,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: false,
-      provinceId: 4,
-      districtId: 7,
       avgRating: 4.7,
     },
     {
@@ -294,8 +314,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1496412705862-e0088f16f791?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: true,
-      provinceId: 5,
-      districtId: 8,
       avgRating: 4.2,
     },
     {
@@ -313,8 +331,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1505691723518-36a1219e0e19?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: true,
-      provinceId: 6,
-      districtId: 9,
       avgRating: 4.9,
     },
     {
@@ -332,8 +348,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: true,
-      provinceId: 1,
-      districtId: 1,
       avgRating: 4.1,
     },
     {
@@ -351,8 +365,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1505691723518-36a1219e0e19?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: true,
-      provinceId: 2,
-      districtId: 4,
       avgRating: 4.6,
     },
     {
@@ -370,8 +382,6 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: true,
-      provinceId: 3,
-      districtId: 6,
       avgRating: 4.8,
     },
     {
@@ -389,13 +399,12 @@ async function seedListings(amenityRecords: Amenity[]) {
       thumbnail:
         "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=2070&auto=format&fit=crop",
       hasFreeWifi: false,
-      provinceId: 4,
-      districtId: 7,
       avgRating: 4.5,
     },
   ];
+
   for (const listing of listingsData) {
-    // Always assign a random province & district from DB to avoid FK errors.
+    // Chọn province ngẫu nhiên
     const provinces = await prisma.province.findMany();
     if (provinces.length === 0) {
       console.warn(`No provinces in DB to assign for listing ${listing.name}, skipping.`);
@@ -404,21 +413,22 @@ async function seedListings(amenityRecords: Amenity[]) {
     const randProv = provinces[Math.floor(Math.random() * provinces.length)];
     const provinceId = randProv.id;
 
-    // Prefer district within the chosen province
+    // Chọn district thuộc province đó
     const districtsInProv = await prisma.district.findMany({ where: { provinceId } });
-    let chosenDistrict = null;
-    if (districtsInProv.length > 0) {
-      chosenDistrict = districtsInProv[Math.floor(Math.random() * districtsInProv.length)];
-    } else {
-      const allDistricts = await prisma.district.findMany();
-      if (allDistricts.length === 0) {
-        console.warn(`No districts in DB to assign for listing ${listing.name}, skipping.`);
-        continue;
-      }
-      chosenDistrict = allDistricts[Math.floor(Math.random() * allDistricts.length)];
+    if (districtsInProv.length === 0) {
+      console.warn(`No districts found in province ${provinceId} for listing ${listing.name}, skipping.`);
+      continue;
     }
+    const chosenDistrict = districtsInProv[Math.floor(Math.random() * districtsInProv.length)];
     const districtId = chosenDistrict.id;
-    console.warn(`Assigned random provinceId ${provinceId} and districtId ${districtId} for listing ${listing.name}.`);
+
+    // Gán roomTypeId dựa trên type
+    const roomType = roomTypeRecords.find(
+      (rt) => rt.name.toLowerCase() === listing.type.toLowerCase()
+    );
+    const roomTypeId = roomType ? roomType.id : undefined;
+
+    console.log(`Assigning listing ${listing.name}: provinceId=${provinceId}, districtId=${districtId}`);
 
     await prisma.listing.upsert({
       where: { id: listing.id },
@@ -435,8 +445,9 @@ async function seedListings(amenityRecords: Amenity[]) {
         provinceId,
         districtId,
         avgRating: listing.avgRating ?? 0,
+        roomTypeId,
       },
-      create: { ...listing, imageUrls: listing.imageUrls ?? [], provinceId, districtId },
+      create: { ...listing, imageUrls: listing.imageUrls ?? [], provinceId, districtId, roomTypeId },
     });
   }
 
@@ -464,7 +475,8 @@ async function main() {
 
   await fetchAndSeedGeo();
   const amenities = await seedAmenities();
-  await seedListings(amenities);
+  const roomTypes = await seedRoomTypes();
+  await seedListings(amenities, roomTypes);
 
   console.log("✅ Seed completed!");
 }

@@ -88,6 +88,14 @@ model Authenticator {
 // Booking models
 // ========================
 
+// Thêm bảng loại phòng
+model RoomType {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  desc      String?
+  listings  Listing[]
+}
+
 // Tiện nghi
 model Amenity {
   id        String     @id @default(cuid())
@@ -121,16 +129,6 @@ model District {
   name       String
   provinceId Int
   province   Province  @relation(fields: [provinceId], references: [id], onDelete: Cascade)
-  wards      Ward[]
-  listings   Listing[]
-}
-
-// Ward / Phường - thuộc District
-model Ward {
-  id         Int     @id
-  name       String
-  districtId Int
-  district   District @relation(fields: [districtId], references: [id], onDelete: Cascade)
   listings   Listing[]
 }
 
@@ -151,11 +149,13 @@ model Listing {
   // store FK ids and relations to cached Province/District/Ward
   provinceId Int?
   districtId Int?
-  wardId     Int?
 
   province Province? @relation(fields: [provinceId], references: [id])
   district District? @relation(fields: [districtId], references: [id])
-  ward     Ward?     @relation(fields: [wardId], references: [id])
+
+  // Thêm liên kết loại phòng
+  roomTypeId String?
+  roomType   RoomType? @relation(fields: [roomTypeId], references: [id])
 
   // new: average rating computed from related Review.stars (stored value)
   avgRating    Float      @default(0)

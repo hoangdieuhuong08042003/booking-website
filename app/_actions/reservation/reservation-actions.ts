@@ -41,6 +41,8 @@ export type CreateReservationInput = {
   chargeId: string;
   daysDifference: number;
   reservedDates: number[];
+  phone: string;
+  totalPrice: number;
   specialRequests?: string | null;
 };
 
@@ -52,6 +54,8 @@ async function createReservation(data: CreateReservationInput): Promise<Reservat
     chargeId,
     daysDifference,
     reservedDates,
+    phone,
+    totalPrice,
     specialRequests,
   } = data;
 
@@ -88,6 +92,8 @@ async function createReservation(data: CreateReservationInput): Promise<Reservat
         chargeId,
         daysDifference,
         reservedDates,
+        phone,
+        totalPrice,
         specialRequests: specialRequests ?? null,
         status: ReservationStatus.ACTIVE,
       },
@@ -141,9 +147,11 @@ async function adminCreateBlockReservation(data: {
   endDate: Date;
   daysDifference: number;
   reservedDates: number[];
+  phone?: string;
+  totalPrice?: number;
   reason?: string | null;
 }): Promise<Reservation> {
-  const { listingId, adminUserId, startDate, endDate, daysDifference, reservedDates, reason } = data;
+  const { listingId, adminUserId, startDate, endDate, daysDifference, reservedDates, phone, totalPrice, reason } = data;
 
   await updateExpiredReservations();
 
@@ -180,6 +188,8 @@ async function adminCreateBlockReservation(data: {
         chargeId: `BLOCK_${Date.now()}`,
         daysDifference,
         reservedDates,
+        phone: phone ?? "N/A",
+        totalPrice: totalPrice ?? 0,
         specialRequests: reason ?? "Admin block",
         status: ReservationStatus.BLOCKED,
       },

@@ -52,6 +52,7 @@ async function createListing(data: {
       hasFreeWifi: true,
       provinceId: true,
       districtId: true,
+
       avgRating: true,
       roomsAvailable: true, // include new field in response
       // trả về danh sách tiện nghi (id + name)
@@ -205,6 +206,114 @@ async function getListingById(listingId: string) {
   return listing;
 }
 
+/**
+ * Lọc listings theo nhiều trường filter (tương tự getPlansByFilter)
+ */
+async function getListingByFilter({
+  title,
+  type,
+  provinceId,
+  districtId, // <-- add
+  priceRange,
+  selectedAmenities,
+  guests,
+  pageIndex = 0,
+  pageSize = 20,
+  roomTypeId,
+}: {
+  title?: string;
+  type?: string;
+  provinceId?: number;
+  districtId?: number; // <-- add
+  priceRange?: [number, number];
+  selectedAmenities?: string[];
+  guests?: number;
+  pageIndex?: number;
+  pageSize?: number;
+  roomTypeId?: string;
+}) {
+  let minBeds: number | undefined;
+  if (guests) {
+    minBeds = Math.ceil(guests / 2);
+  }
+
+  const where: Prisma.ListingWhereInput = {
+    ...(title
+      ? { name: { contains: title, mode: "insensitive" } }
+      : {}),
+    ...(type ? { type } : {}),
+    ...(roomTypeId ? { roomTypeId } : {}),
+    ...(provinceId ? { provinceId } : {}),
+    ...(districtId ? { districtId } : {}), // <-- add
+  
+    ...(minBeds ? { beds: { gte: minBeds } } : {}),
+    ...(priceRange
+      ? { pricePerNight: { gte: priceRange[0], lte: priceRange[1] } }
+      : {}),
+    ...(selectedAmenities && selectedAmenities.length
+      ? {
+          amenities: {
+            some: {
+              amenity: { name: { in: selectedAmenities } },
+            },
+          },
+        }
+      : {}),
+  };
+
+  const listings = await prisma.listing.findMany({
+    where,
+    orderBy: { avgRating: "desc" },
+    skip: pageIndex * pageSize,
+    take: pageSize,
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      desc: true,
+      pricePerNight: true,
+      beds: true,
+      imageUrls: true,
+      thumbnail: true,
+      hasFreeWifi: true,
+      provinceId: true,
+      districtId: true,
+  
+      roomTypeId: true, // <-- add this line
+      avgRating: true,
+      roomsAvailable: true,
+      province: { select: { id: true, name: true } },
+      district: { select: { id: true, name: true } },
+      amenities: {
+        select: {
+          amenity: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return listings;
+}
+
+/**
+ * Lấy min/max price của tất cả listings
+ */
+async function getListingPriceRange() {
+  const [minResult, maxResult] = await Promise.all([
+    prisma.listing.aggregate({ _min: { pricePerNight: true } }),
+    prisma.listing.aggregate({ _max: { pricePerNight: true } }),
+  ]);
+  return {
+    min: minResult._min.pricePerNight ?? 0,
+    max: maxResult._max.pricePerNight ?? 10000000,
+  };
+}
+
 // (REMOVE) createReservation implementation moved to reservation-actions.ts
 
 export {
@@ -212,5 +321,7 @@ export {
   getNewestListings,
   searchListings,
   getListingById,
+  getListingByFilter, // <-- export mới
+  getListingPriceRange, // <-- export mới
   // createReservation removed from here
 };

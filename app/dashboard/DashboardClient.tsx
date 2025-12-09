@@ -1,55 +1,90 @@
 "use client";
 
 import { useState } from "react";
-import { SearchForm, type SearchFormData } from "../_components/search-form";
+import { useQuery } from "@tanstack/react-query";
+
 import { HotelList } from "../_components/hotel-list";
-import type { Listing } from "@prisma/client"; // type-only import
+import { getListingByFilter } from "../_actions/listing/listing-actions";
+import { FilterSidebar, FilterData } from "../_components/filter";
+import { Listing } from "@prisma/client";
 
 export default function DashboardClient({
   initialListings,
 }: {
-  initialListings: Listing[]; // dùng Listing trực tiếp
+  initialListings: Listing[];
 }) {
-  const [searchResults, setSearchResults] = useState<Listing[]>([]);
-  const [isSearched, setIsSearched] = useState(false);
+  const [filters, setFilters] = useState<FilterData>({
+    location: "",
+    checkIn: "",
+    checkOut: "",
+    guests: 2,
+    roomTypeId: "",
+    priceRange: undefined,
+    selectedAmenities: [],
+  });
 
-  // added loading state
-  const [isLoading, setIsLoading] = useState(false);
+  const [searchTriggered, setSearchTriggered] = useState(false);
 
-  // replaced temporary handler with real API call, typed properly
-  const handleSearch = async (formData: SearchFormData) => {
-    setIsSearched(true);
-    setIsLoading(true);
+  const pageSize = 12;
+  const pageIndex = 0;
 
-    try {
-      const res = await fetch("/api/search-listings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+  // Query for listings with filters
+  const { data: listingsData, isLoading } = useQuery({
+    queryKey: [
+      "listings",
+      filters.location,
+      filters.district, // <-- add
+      filters.guests,
+      filters.roomTypeId,
+      filters.priceRange,
+      filters.selectedAmenities,
+    ],
+    queryFn: () =>
+      getListingByFilter({
+        provinceId: filters.location ? parseInt(filters.location) : undefined,
+        districtId: filters.district ? parseInt(filters.district) : undefined, // <-- add
+        guests: filters.guests || undefined,
+        roomTypeId: filters.roomTypeId || undefined,
+        priceRange: filters.priceRange,
+        selectedAmenities:
+          filters.selectedAmenities && filters.selectedAmenities.length > 0
+            ? filters.selectedAmenities
+            : undefined,
+        pageIndex,
+        pageSize,
+      }),
+    refetchOnWindowFocus: false,
+    enabled: searchTriggered, // Only run the query if search has been triggered
+  });
 
-      if (!res.ok) {
-        throw new Error("Search request failed");
-      }
+  const listings = listingsData ?? initialListings;
 
-      const data = await res.json();
-      setSearchResults(data || []);
-    } catch (err) {
-      console.error("Search error:", err);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
+  // Called when filter values change, but does NOT trigger search
+  const handleFilterChange = (data: FilterData) => {
+    setFilters(data);
+  };
+
+  // Called when search button in FilterSidebar is clicked
+  const handleSearch = (data: FilterData) => {
+    setFilters(data);
+    setSearchTriggered(true);
   };
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <SearchForm onSearch={handleSearch} />
-      <HotelList
-        hotels={isSearched ? searchResults : initialListings}
-        title={isSearched ? undefined : "Khách sạn nổi bật"}
-        isLoading={isLoading}
-      />
+      <div className="flex flex-col md:flex-row gap-8">
+        <FilterSidebar
+          onFilterChange={handleFilterChange}
+          onSearch={handleSearch}
+        />
+        <div className="flex-1">
+          <HotelList
+            hotels={listings}
+            title={listings.length > 0 ? undefined : "Khách sạn nổi bật"}
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
     </div>
   );
 }
