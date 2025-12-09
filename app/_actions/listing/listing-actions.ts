@@ -240,7 +240,6 @@ async function getListingByFilter({
     ...(roomTypeId ? { roomTypeId } : {}),
     ...(provinceId ? { provinceId } : {}),
     ...(wardId ? { wardId } : {}),
-  
     ...(minBeds ? { beds: { gte: minBeds } } : {}),
     ...(priceRange
       ? { pricePerNight: { gte: priceRange[0], lte: priceRange[1] } }
@@ -256,9 +255,10 @@ async function getListingByFilter({
       : {}),
   };
 
-  // Get total count for pagination
+  // ✅ Get total count for pagination
   const total = await prisma.listing.count({ where });
 
+  // ✅ Fetch only the current page
   const listings = await prisma.listing.findMany({
     where,
     orderBy: { avgRating: "desc" },
@@ -275,7 +275,7 @@ async function getListingByFilter({
       thumbnail: true,
       provinceId: true,
       wardId: true,
-      roomTypeId: true, // <-- add this line
+      roomTypeId: true,
       avgRating: true,
       roomsAvailable: true,
       province: { select: { id: true, name: true } },
@@ -293,6 +293,7 @@ async function getListingByFilter({
     },
   });
 
+  // ✅ Return structure: { listings: [...], total: number }
   return { listings, total };
 }
 
@@ -317,7 +318,6 @@ export {
   getNewestListings,
   searchListings,
   getListingById,
-  getListingByFilter, // <-- export mới
-  getListingPriceRange, // <-- export mới
-  // createReservation removed from here
+  getListingByFilter,
+  getListingPriceRange,
 };

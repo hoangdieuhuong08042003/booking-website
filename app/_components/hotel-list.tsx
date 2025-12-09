@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { HotelCard } from "./hotel-card";
 import type { Listing } from "@prisma/client";
 import {
@@ -20,9 +19,8 @@ type ListingWithRelations = Listing & {
 };
 
 interface HotelListProps {
-  hotels: ListingWithRelations[]; // now accepts Prisma Listing objects (optionally with relations)
+  hotels: ListingWithRelations[];
   title?: string;
-  // pagination props (optional to preserve backward compatibility)
   pageIndex?: number;
   pageSize?: number;
   totalHotels?: number;
@@ -34,7 +32,7 @@ export function HotelList({
   hotels,
   title,
   pageIndex = 0,
-  pageSize = 6,
+  pageSize = 12,
   totalHotels,
   onPageChange,
   isLoading = false,
@@ -43,28 +41,17 @@ export function HotelList({
     typeof totalHotels === "number" ? totalHotels : hotels.length;
   const displayTitle = title || `Kết quả tìm kiếm (${totalCount} chỗ lưu trú)`;
 
-  // internal pagination state (fallback when no onPageChange provided)
-  const [internalPage, setInternalPage] = useState<number>(pageIndex);
-  useEffect(() => setInternalPage(pageIndex), [pageIndex]);
-  const currentPage =
-    typeof onPageChange === "function" ? pageIndex : internalPage;
-
-  // Remove local slicing: hotels are already paged from backend
+  // ✅ Data is already paginated from server, just display
   const displayedHotels = hotels;
 
-  // If totalHotels provided use it, otherwise fall back to hotels.length.
   const effectiveTotal =
     typeof totalHotels === "number" ? totalHotels : hotels.length;
-  // show pagination whenever there are more items than pageSize (works with or without onPageChange)
   const showPagination = effectiveTotal > pageSize;
   const pageCount = Math.max(1, Math.ceil(effectiveTotal / pageSize));
 
-  // goTo will call external onPageChange if provided, otherwise update internal state
-  const goTo = (index: number) => {
-    if (typeof onPageChange === "function") {
-      onPageChange(index);
-    } else {
-      setInternalPage(index);
+  const handlePageChange = (newIndex: number) => {
+    if (onPageChange) {
+      onPageChange(newIndex);
     }
   };
 
@@ -82,27 +69,20 @@ export function HotelList({
               className="border border-border rounded-lg overflow-hidden bg-card"
             >
               <div className="relative h-48 w-full bg-muted">
-                {/* thêm bg-gray-200 cho skeleton (màu xám nhạt) */}
                 <Skeleton className="h-full w-full bg-gray-200" />
               </div>
-
               <div className="p-4">
-                {/* tiêu đề skeleton */}
                 <Skeleton className="h-6 w-3/4 mb-3 bg-gray-200" />
-
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
                   <Skeleton className="h-4 w-1/3 bg-gray-200" />
                 </div>
-
                 <div className="flex items-center gap-2 mb-4">
                   <Skeleton className="h-4 w-12 bg-gray-200" />
                 </div>
-
                 <div className="flex flex-wrap gap-2 mb-4">
                   <Skeleton className="h-6 w-20 bg-gray-200" />
                   <Skeleton className="h-6 w-20 bg-gray-200" />
                 </div>
-
                 <div className="flex items-end justify-between">
                   <Skeleton className="h-5 w-24 bg-gray-200" />
                   <Skeleton className="h-9 w-28 bg-gray-200" />
@@ -123,42 +103,42 @@ export function HotelList({
         </div>
       )}
 
-      {/* Pagination: render when effectiveTotal > pageSize (supports internal or external paging) */}
       {showPagination && (
         <Pagination className="my-8">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => goTo(Math.max(currentPage - 1, 0))}
+                onClick={() => handlePageChange(Math.max(pageIndex - 1, 0))}
                 aria-label="Trang trước"
                 className={
-                  currentPage === 0 ? "opacity-50 pointer-events-none" : ""
+                  pageIndex === 0 ? "opacity-50 pointer-events-none" : ""
                 }
               >
                 Trước
               </PaginationPrevious>
             </PaginationItem>
 
-            {Array.from({ length: pageCount }, (_, index) => {
-              const isCurrent = currentPage === index;
-              return (
-                <PaginationItem key={index}>
-                  <PaginationLink
-                    className={isCurrent ? "bg-gray-200 dark:bg-white/6" : ""}
-                    onClick={() => goTo(index)}
-                  >
-                    {index + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              );
-            })}
+            {Array.from({ length: pageCount }, (_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  className={
+                    pageIndex === index ? "bg-gray-200 dark:bg-white/10" : ""
+                  }
+                  onClick={() => handlePageChange(index)}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
 
             <PaginationItem>
               <PaginationNext
-                onClick={() => goTo(Math.min(currentPage + 1, pageCount - 1))}
+                onClick={() =>
+                  handlePageChange(Math.min(pageIndex + 1, pageCount - 1))
+                }
                 aria-label="Trang sau"
                 className={
-                  currentPage >= pageCount - 1
+                  pageIndex >= pageCount - 1
                     ? "opacity-50 pointer-events-none"
                     : ""
                 }

@@ -24,13 +24,16 @@ export default function DashboardClient({
   });
 
   const [searchTriggered, setSearchTriggered] = useState(false);
-
-  // Pagination state
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 12;
 
   // Query for listings with filters and pagination
-  const { data: listingsData, isLoading } = useQuery({
+  // Each page is cached separately due to pageIndex in queryKey
+  const {
+    data: listingsData,
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: [
       "listings",
       filters.location,
@@ -39,7 +42,7 @@ export default function DashboardClient({
       filters.roomTypeId,
       filters.priceRange,
       filters.selectedAmenities,
-      pageIndex,
+      pageIndex, // ✅ Each page cached separately
       pageSize,
     ],
     queryFn: () =>
@@ -57,10 +60,12 @@ export default function DashboardClient({
         pageSize,
       }),
     refetchOnWindowFocus: false,
-    enabled: searchTriggered, // Only run the query if search has been triggered
+    enabled: searchTriggered,
+    staleTime: 5 * 60 * 1000, // ✅ Cache valid for 5 minutes
+    gcTime: 10 * 60 * 1000, // ✅ Keep unused pages for 10 minutes
+    placeholderData: (previousData) => previousData, // ✅ Keep previous page while fetching
   });
 
-  // listingsData can be either array or { listings, total }
   const listings = Array.isArray(listingsData)
     ? listingsData
     : listingsData?.listings ?? initialListings;
@@ -71,19 +76,16 @@ export default function DashboardClient({
       ? listingsData.length
       : initialListings.length;
 
-  // Called when filter values change, but does NOT trigger search
   const handleFilterChange = (data: FilterData) => {
     setFilters(data);
   };
 
-  // Called when search button in FilterSidebar is clicked
   const handleSearch = (data: FilterData) => {
     setFilters(data);
     setSearchTriggered(true);
-    setPageIndex(0); // Reset to first page on new search
+    setPageIndex(0);
   };
 
-  // Pagination handler
   const handlePageChange = (newPageIndex: number) => {
     setPageIndex(newPageIndex);
   };
@@ -99,7 +101,7 @@ export default function DashboardClient({
           <HotelList
             hotels={listings}
             title={listings.length > 0 ? undefined : "Khách sạn nổi bật"}
-            isLoading={isLoading}
+            isLoading={isLoading || isFetching}
             pageIndex={pageIndex}
             pageSize={pageSize}
             onPageChange={handlePageChange}
