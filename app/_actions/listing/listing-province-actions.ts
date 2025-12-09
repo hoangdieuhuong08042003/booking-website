@@ -15,8 +15,8 @@ export async function getProvinces() {
 /**
  * Lấy tất cả quận/huyện theo tỉnh
  */
-export async function getDistricts(provinceId: number) {
-  return await prisma.district.findMany({
+export async function getWards(provinceId: string) {
+  return await prisma.ward.findMany({
     where: { provinceId },
     select: { id: true, name: true },
     orderBy: { name: "asc" },

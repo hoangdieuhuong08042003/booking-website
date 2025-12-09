@@ -19,8 +19,8 @@ import {
   getAmenity,
 } from "@/app/_actions/listing/listing-amenity-actions";
 import {
-  getDistricts,
   getProvinces,
+  getWards,
 } from "@/app/_actions/listing/listing-province-actions";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider"; // Add slider import
@@ -28,8 +28,7 @@ import { Slider } from "@/components/ui/slider"; // Add slider import
 // Filter Data
 export type FilterData = {
   location?: string;
-  district?: string; // <-- add
-  ward?: string; // <-- add
+  ward?: string;
   checkIn?: string;
   checkOut?: string;
   guests?: number;
@@ -47,7 +46,6 @@ type RoomTypeOption = { value: string; label: string };
 
 const defaultFilters: FilterData = {
   location: "",
-  district: "", // <-- add
   ward: "",
   checkIn: "",
   checkOut: "",
@@ -64,13 +62,13 @@ export function FilterSidebar({
   const [filters, setFilters] = useState<FilterData>(defaultFilters);
 
   const [provinces, setProvinces] = useState<
-    { province_id: number; province_name: string }[]
+    { province_id: string; province_name: string }[]
   >([]);
-  const [districts, setDistricts] = useState<
-    { district_id: number; district_name: string }[]
-  >([]); // <-- new
+  const [wards, setWards] = useState<{ ward_id: string; ward_name: string }[]>(
+    []
+  );
   const [loadingProvinces, setLoadingProvinces] = useState(true);
-  const [loadingDistricts, setLoadingDistricts] = useState(false); // <-- new
+  const [loadingWards, setLoadingWards] = useState(false);
 
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [roomTypes, setRoomTypes] = useState<RoomTypeOption[]>([]);
@@ -94,7 +92,7 @@ export function FilterSidebar({
     getProvinces()
       .then((data) =>
         setProvinces(
-          (data as { id: number; name: string }[] | undefined)?.map((p) => ({
+          (data as { id: string; name: string }[] | undefined)?.map((p) => ({
             province_id: p.id,
             province_name: p.name,
           })) ?? []
@@ -103,24 +101,24 @@ export function FilterSidebar({
       .finally(() => setLoadingProvinces(false));
   }, []);
 
-  // Fetch Districts when province changes
+  // Fetch Wards when province changes
   useEffect(() => {
     if (!filters.location) {
-      setDistricts([]);
-      setFilters((prev) => ({ ...prev, district: "", ward: "" }));
+      setWards([]);
+      setFilters((prev) => ({ ...prev, ward: "" }));
       return;
     }
-    setLoadingDistricts(true);
-    getDistricts(Number(filters.location))
+    setLoadingWards(true);
+    getWards(filters.location)
       .then((data) =>
-        setDistricts(
-          (data as { id: number; name: string }[] | undefined)?.map((d) => ({
-            district_id: d.id,
-            district_name: d.name,
+        setWards(
+          (data as { id: string; name: string }[] | undefined)?.map((w) => ({
+            ward_id: w.id,
+            ward_name: w.name,
           })) ?? []
         )
       )
-      .finally(() => setLoadingDistricts(false));
+      .finally(() => setLoadingWards(false));
   }, [filters.location]);
 
   // Fetch Amenities
@@ -217,44 +215,44 @@ export function FilterSidebar({
         <div>
           <label className="text-sm font-semibold flex items-center gap-2 mb-1">
             <MapPin className="w-4 h-4 text-primary" />
-            Địa điểm
+            Tỉnh/Thành phố
           </label>
           <select
             value={filters.location}
             onChange={(e) => updateFilter("location", e.target.value)}
             className="w-full px-3 py-2 border rounded-md"
           >
-            <option value="">Chọn thành phố</option>
+            <option value="">Chọn tỉnh/thành phố</option>
             {loadingProvinces ? (
               <option disabled>Đang tải...</option>
             ) : (
               provinces.map((p) => (
-                <option key={p.province_id} value={String(p.province_id)}>
+                <option key={p.province_id} value={p.province_id}>
                   {p.province_name}
                 </option>
               ))
             )}
           </select>
         </div>
-        {/* District */}
+        {/* Ward */}
         <div>
           <label className="text-sm font-semibold flex items-center gap-2 mb-1">
             <MapPin className="w-4 h-4 text-primary" />
-            Quận/Huyện
+            Quận/Huyện/Xã
           </label>
           <select
-            value={filters.district}
-            onChange={(e) => updateFilter("district", e.target.value)}
+            value={filters.ward}
+            onChange={(e) => updateFilter("ward", e.target.value)}
             className="w-full px-3 py-2 border rounded-md"
             disabled={!filters.location}
           >
-            <option value="">Chọn quận/huyện</option>
-            {loadingDistricts ? (
+            <option value="">Chọn quận/huyện/xã</option>
+            {loadingWards ? (
               <option disabled>Đang tải...</option>
             ) : (
-              districts.map((d) => (
-                <option key={d.district_id} value={String(d.district_id)}>
-                  {d.district_name}
+              wards.map((w) => (
+                <option key={w.ward_id} value={w.ward_id}>
+                  {w.ward_name}
                 </option>
               ))
             )}

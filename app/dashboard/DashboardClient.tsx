@@ -33,7 +33,7 @@ export default function DashboardClient({
     queryKey: [
       "listings",
       filters.location,
-      filters.district, // <-- add
+      filters.ward,
       filters.guests,
       filters.roomTypeId,
       filters.priceRange,
@@ -41,8 +41,8 @@ export default function DashboardClient({
     ],
     queryFn: () =>
       getListingByFilter({
-        provinceId: filters.location ? parseInt(filters.location) : undefined,
-        districtId: filters.district ? parseInt(filters.district) : undefined, // <-- add
+        provinceId: filters.location || undefined,
+        wardId: filters.ward || undefined,
         guests: filters.guests || undefined,
         roomTypeId: filters.roomTypeId || undefined,
         priceRange: filters.priceRange,

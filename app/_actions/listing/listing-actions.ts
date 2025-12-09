@@ -14,25 +14,27 @@ async function createListing(data: {
   pricePerNight: number;
   beds: number;
   imageUrls?: string[];
-  thumbnail: string; // <-- made required
-  hasFreeWifi?: boolean;
-  provinceId?: number | null;
-  districtId?: number | null;
-  amenityIds?: string[]; // <-- để tạo quan hệ tiện nghi
-  roomsAvailable?: number; // <-- new optional input
+  thumbnail: string;
+  provinceId?: string | null;   // <--- FIX
+  wardId?: string | null;       // <--- FIX
+  amenityIds?: string[];
+  roomsAvailable?: number;
 }) {
-  const { amenityIds, thumbnail, roomsAvailable, ...rest } = data;
-  // thumbnail is required by input/schema — use it directly
-  const computedThumbnail = thumbnail;
+  const { amenityIds, thumbnail, roomsAvailable, provinceId, wardId, ...rest } = data;
 
   const created = await prisma.listing.create({
     data: {
       ...rest,
       imageUrls: rest.imageUrls ?? [],
-      thumbnail: computedThumbnail,
-      roomsAvailable: roomsAvailable ?? 0, // persist roomsAvailable
+      thumbnail,
+      roomsAvailable: roomsAvailable ?? 0,
+
+      // 🔥 FIX LONG-TERM — correct Prisma relation creation
+      province: provinceId ? { connect: { id: provinceId } } : undefined,
+      ward: wardId ? { connect: { id: wardId } } : undefined,
+
       amenities:
-        amenityIds && amenityIds.length > 0
+        amenityIds?.length
           ? {
               create: amenityIds.map((amenityId) => ({
                 amenity: { connect: { id: amenityId } },
@@ -49,30 +51,23 @@ async function createListing(data: {
       beds: true,
       imageUrls: true,
       thumbnail: true,
-      hasFreeWifi: true,
       provinceId: true,
-      districtId: true,
-
+      wardId: true,
       avgRating: true,
-      roomsAvailable: true, // include new field in response
-      // trả về danh sách tiện nghi (id + name)
+      roomsAvailable: true,
       amenities: {
         select: {
-          amenity: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          amenity: { select: { id: true, name: true } },
         },
       },
-      // trả về thông tin tỉnh/quận (nếu cần)
       province: { select: { id: true, name: true } },
-      district: { select: { id: true, name: true } },
+      ward: { select: { id: true, name: true } },
     },
   });
+
   return created;
 }
+
 
 // Thêm: lấy tất cả listings (không giới hạn số lượng)
 async function getNewestListings() {
@@ -87,13 +82,13 @@ async function getNewestListings() {
       beds: true,
       imageUrls: true,
       thumbnail: true,
-      hasFreeWifi: true,
       provinceId: true,
-      districtId: true,
+      wardId: true,
+      roomTypeId: true,
       avgRating: true,
       roomsAvailable: true,
       province: { select: { id: true, name: true } },
-      district: { select: { id: true, name: true } },
+      ward: { select: { id: true, name: true } },
       amenities: {
         select: {
           amenity: {
@@ -112,7 +107,7 @@ async function getNewestListings() {
 
 async function searchListings({
   provinceId,
-  districtId,
+  wardId,
   startDate,
   endDate,
   numGuests,
@@ -121,8 +116,8 @@ async function searchListings({
   type,
   selectedAmenities = [],
 }: {
-  provinceId?: number;
-  districtId?: number;
+  provinceId?: string;
+  wardId?: string;
   startDate?: Date;
   endDate?: Date;
   numGuests?: number;
@@ -155,10 +150,10 @@ const blockingStatus: ReservationStatus[] = [ReservationStatus.ACTIVE, Reservati
   // Fetch listings with reservations matching the above filter so we can compute availability
   const listings = await prisma.listing.findMany({
     where: {
-      provinceId: provinceId ?? undefined,
-      districtId: districtId ?? undefined,
+      provinceId,
+      wardId,
       beds: minBeds ? { gte: minBeds } : undefined,
-      type: type ?? undefined,
+      type,
       pricePerNight:
         minPrice !== undefined || maxPrice !== undefined
           ? { gte: minPrice ?? 0, lte: maxPrice ?? 999999999 }
@@ -169,7 +164,7 @@ const blockingStatus: ReservationStatus[] = [ReservationStatus.ACTIVE, Reservati
     },
     include: {
       province: true,
-      district: true,
+      ward: true,
       amenities: { include: { amenity: true } },
       // include only overlapping (or future) reservations that actually block rooms
       reservations: { where: { AND: [reservationDateWhere, { status: { in: blockingStatus } }] }, select: { id: true } },
@@ -199,7 +194,7 @@ async function getListingById(listingId: string) {
     where: { id: listingId },
     include: {
       province: true,
-      district: true,
+      ward: true,
       amenities: { include: { amenity: true } },
     },
   });
@@ -213,7 +208,7 @@ async function getListingByFilter({
   title,
   type,
   provinceId,
-  districtId, // <-- add
+  wardId,
   priceRange,
   selectedAmenities,
   guests,
@@ -223,8 +218,8 @@ async function getListingByFilter({
 }: {
   title?: string;
   type?: string;
-  provinceId?: number;
-  districtId?: number; // <-- add
+  provinceId?: string;
+  wardId?: string;
   priceRange?: [number, number];
   selectedAmenities?: string[];
   guests?: number;
@@ -244,7 +239,7 @@ async function getListingByFilter({
     ...(type ? { type } : {}),
     ...(roomTypeId ? { roomTypeId } : {}),
     ...(provinceId ? { provinceId } : {}),
-    ...(districtId ? { districtId } : {}), // <-- add
+    ...(wardId ? { wardId } : {}),
   
     ...(minBeds ? { beds: { gte: minBeds } } : {}),
     ...(priceRange
@@ -275,15 +270,13 @@ async function getListingByFilter({
       beds: true,
       imageUrls: true,
       thumbnail: true,
-      hasFreeWifi: true,
       provinceId: true,
-      districtId: true,
-  
+      wardId: true,
       roomTypeId: true, // <-- add this line
       avgRating: true,
       roomsAvailable: true,
       province: { select: { id: true, name: true } },
-      district: { select: { id: true, name: true } },
+      ward: { select: { id: true, name: true } },
       amenities: {
         select: {
           amenity: {
