@@ -10,8 +10,10 @@ import { Listing } from "@prisma/client";
 
 export default function DashboardClient({
   initialListings,
+  totalInitial,
 }: {
   initialListings: Listing[];
+  totalInitial: number;
 }) {
   const [filters, setFilters] = useState<FilterData>({
     location: "",
@@ -23,28 +25,20 @@ export default function DashboardClient({
     selectedAmenities: [],
   });
 
-  const [searchTriggered, setSearchTriggered] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
-  const pageSize = 12;
+  const pageSize = 8;
 
-  // Query for listings with filters and pagination
-  // Each page is cached separately due to pageIndex in queryKey
-  const {
-    data: listingsData,
-    isLoading,
-    isFetching,
-  } = useQuery({
-    queryKey: [
-      "listings",
-      filters.location,
-      filters.ward,
-      filters.guests,
-      filters.roomTypeId,
-      filters.priceRange,
-      filters.selectedAmenities,
-      pageIndex, // ✅ Each page cached separately
-      pageSize,
-    ],
+  const handleFilterChange = (data: FilterData) => setFilters(data);
+
+  const handleSearch = (data: FilterData) => {
+    setFilters(data);
+    setPageIndex(0);
+  };
+
+  const handlePageChange = (newPage: number) => setPageIndex(newPage);
+
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ["listings", filters, pageIndex],
     queryFn: () =>
       getListingByFilter({
         provinceId: filters.location || undefined,
@@ -53,42 +47,19 @@ export default function DashboardClient({
         roomTypeId: filters.roomTypeId || undefined,
         priceRange: filters.priceRange,
         selectedAmenities:
-          filters.selectedAmenities && filters.selectedAmenities.length > 0
+          filters.selectedAmenities?.length > 0
             ? filters.selectedAmenities
             : undefined,
         pageIndex,
         pageSize,
       }),
-    refetchOnWindowFocus: false,
-    enabled: searchTriggered,
-    staleTime: 5 * 60 * 1000, // ✅ Cache valid for 5 minutes
-    gcTime: 10 * 60 * 1000, // ✅ Keep unused pages for 10 minutes
-    placeholderData: (previousData) => previousData, // ✅ Keep previous page while fetching
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    enabled: true,
+    placeholderData: (prevData) => prevData, // giữ data cũ khi fetching
   });
-
-  const listings = Array.isArray(listingsData)
-    ? listingsData
-    : listingsData?.listings ?? initialListings;
-  const totalHotels =
-    typeof listingsData?.total === "number"
-      ? listingsData.total
-      : Array.isArray(listingsData)
-      ? listingsData.length
-      : initialListings.length;
-
-  const handleFilterChange = (data: FilterData) => {
-    setFilters(data);
-  };
-
-  const handleSearch = (data: FilterData) => {
-    setFilters(data);
-    setSearchTriggered(true);
-    setPageIndex(0);
-  };
-
-  const handlePageChange = (newPageIndex: number) => {
-    setPageIndex(newPageIndex);
-  };
+  const listings = data?.listings ?? initialListings;
+  const totalHotels = data?.total ?? totalInitial;
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -100,12 +71,12 @@ export default function DashboardClient({
         <div className="flex-1">
           <HotelList
             hotels={listings}
-            title={listings.length > 0 ? undefined : "Khách sạn nổi bật"}
-            isLoading={isLoading || isFetching}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            onPageChange={handlePageChange}
             totalHotels={totalHotels}
+            onPageChange={handlePageChange}
+            isLoading={isLoading || isFetching}
+            title={listings.length > 0 ? undefined : "Khách sạn nổi bật"}
           />
         </div>
       </div>
