@@ -284,7 +284,7 @@ async function getBookingById(reservationId: string): Promise<
         avgRating: number;
         roomType: { name: string } | null;
         province: { name: string } | null;
-        district: { name: string } | null;
+        ward: { name: string } | null;
       } | null;
       user: {
         name: string | null;
@@ -312,7 +312,7 @@ async function getBookingById(reservationId: string): Promise<
           province: {
             select: { name: true },
           },
-          district: {
+          ward: {
             select: { name: true },
           },
         },

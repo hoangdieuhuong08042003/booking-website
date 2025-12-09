@@ -2,8 +2,21 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Calendar,
+  Users,
+  Phone,
+} from "lucide-react";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import { createReservation } from "@/app/_actions/reservation/reservation-actions";
 import { useSession } from "next-auth/react";
@@ -39,6 +52,9 @@ export default function BookingPage() {
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
 
   const formatDateInt = (d: Date) =>
     parseInt(d.toISOString().slice(0, 10).replace(/-/g, ""));
@@ -127,15 +143,80 @@ export default function BookingPage() {
 
   if (bookingConfirmed) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center">
+      <main className="min-h-screen bg-background">
         <DashboardHeader />
-        <div className="text-center">
-          <div className="text-6xl mb-4">✓</div>
-          <h1 className="text-3xl font-bold mb-2">Đặt phòng thành công!</h1>
-          <p className="text-muted-foreground mb-6">
-            Chuyển hướng đến danh sách booking của bạn...
-          </p>
-        </div>
+        <Dialog open={bookingConfirmed} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md" showCloseButton={false}>
+            <DialogHeader>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                <CheckCircle2 className="h-10 w-10 text-green-600" />
+              </div>
+              <DialogTitle className="text-center text-2xl">
+                Đặt phòng thành công!
+              </DialogTitle>
+              <DialogDescription className="text-center">
+                Cảm ơn bạn đã tin tưởng sử dụng dịch vụ của chúng tôi
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-muted-foreground text-xs">
+                      Check-in → Check-out
+                    </p>
+                    <p className="font-medium">
+                      {formData.checkIn} → {formData.checkOut}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-muted-foreground text-xs">Số khách</p>
+                    <p className="font-medium">{formData.guests} người</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-muted-foreground text-xs">Liên hệ</p>
+                    <p className="font-medium">{formData.phone}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Tổng thanh toán
+                  </span>
+                  <span className="text-xl font-bold text-primary">
+                    {totalPrice.toLocaleString("vi-VN")} ₫
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={() => (window.location.href = "/dashboard/mybookings")}
+                className="w-full"
+              >
+                Xem booking của tôi
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => (window.location.href = "/dashboard")}
+                className="w-full"
+              >
+                Về trang chủ
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     );
   }
@@ -168,6 +249,7 @@ export default function BookingPage() {
                     <input
                       type="date"
                       required
+                      min={today}
                       value={formData.checkIn}
                       onChange={(e) =>
                         setFormData({ ...formData, checkIn: e.target.value })
@@ -182,6 +264,7 @@ export default function BookingPage() {
                     <input
                       type="date"
                       required
+                      min={formData.checkIn || today}
                       value={formData.checkOut}
                       onChange={(e) =>
                         setFormData({ ...formData, checkOut: e.target.value })

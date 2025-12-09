@@ -29,7 +29,7 @@ export default async function HotelDetailPage({
   const imageSrc =
     listing.thumbnail ?? listing.imageUrls?.[0] ?? "/placeholder.svg";
   const location =
-    listing.province?.name ?? listing.district?.name ?? listing.type ?? "";
+    listing.province?.name ?? listing.ward?.name ?? listing.type ?? "";
   const rating = listing.avgRating ?? 0;
   const amenities = listing.amenities?.map((a) => a.amenity.name) ?? [];
 
