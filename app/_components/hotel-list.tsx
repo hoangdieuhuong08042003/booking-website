@@ -1,7 +1,6 @@
 "use client";
 
 import { HotelCard } from "./hotel-card";
-import type { Listing } from "@prisma/client";
 import {
   Pagination,
   PaginationContent,
@@ -11,15 +10,10 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-
-type ListingWithRelations = Listing & {
-  province?: { id: number; name: string } | null;
-  district?: { id: number; name: string } | null;
-  thumbnail?: string | null;
-};
+import { Listing } from "@prisma/client";
 
 interface HotelListProps {
-  hotels: ListingWithRelations[];
+  hotels: Listing[];
   title?: string;
   pageIndex?: number;
   pageSize?: number;

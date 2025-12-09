@@ -62,6 +62,7 @@ async function createListing(data: {
       },
       province: { select: { id: true, name: true } },
       ward: { select: { id: true, name: true } },
+      
     },
   });
 
@@ -195,6 +196,7 @@ async function getListingById(listingId: string) {
     include: {
       province: true,
       ward: true,
+    
       amenities: { include: { amenity: true } },
     },
   });

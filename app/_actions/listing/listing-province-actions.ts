@@ -23,3 +23,17 @@ export async function getWards(provinceId: string) {
   });
 }
 
+/**
+ * Lấy danh sách listings với thông tin province và ward
+ */
+export async function getListingsWithRelations(listingIds: string[]) {
+  return await prisma.listing.findMany({
+    where: { id: { in: listingIds } },
+    include: {
+      province: { select: { name: true } },
+      ward: { select: { name: true } },
+      amenities: { include: { amenity: true } },
+    },
+  });
+}
+

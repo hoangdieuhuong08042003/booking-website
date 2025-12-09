@@ -5,6 +5,7 @@ import { Star, MapPin, Wifi, Utensils, Dumbbell } from "lucide-react";
 import { getListingById } from "@/app/_actions/listing/listing-actions";
 import Link from "next/link";
 import ListingReviews from "@/app/(site)/listings/[listingId]/_components/listing-reviews";
+import { Button } from "@/components/ui/button";
 
 export default async function HotelDetailPage({
   params,
@@ -30,7 +31,9 @@ export default async function HotelDetailPage({
   const imageSrc =
     listing.thumbnail ?? listing.imageUrls?.[0] ?? "/placeholder.svg";
   const location =
-    listing.province?.name ?? listing.ward?.name ?? listing.type ?? "";
+    listing.province?.name && listing.ward?.name
+      ? `${listing.ward.name}, ${listing.province.name}`
+      : listing.province?.name ?? listing.ward?.name ?? listing.type ?? "";
   const rating = listing.avgRating ?? 0;
   const amenities = listing.amenities?.map((a) => a.amenity.name) ?? [];
 
@@ -155,9 +158,9 @@ export default async function HotelDetailPage({
                       String(listing.pricePerNight)
                     )}&name=${encodeURIComponent(String(listing.name))}`}
                   >
-                    <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-4 lg:py-6 text-lg lg:text-xl rounded">
+                    <Button className="w-full py-4 lg:py-6 text-lg lg:text-xl">
                       Tiếp tục đặt phòng
-                    </button>
+                    </Button>
                   </Link>
                 </div>
               </div>

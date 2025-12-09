@@ -8,7 +8,7 @@ import type { Listing } from "@prisma/client";
 
 type ListingWithRelations = Listing & {
   province?: { id: number; name: string } | null;
-  district?: { id: number; name: string } | null;
+  ward?: { id: number; name: string } | null;
   thumbnail?: string | null;
   amenities?: { amenity: { id: string; name: string } }[];
 };
@@ -21,7 +21,9 @@ export function HotelCard({ listing }: ListingCardProps) {
   const imageSrc =
     listing.thumbnail ?? listing.imageUrls?.[0] ?? "/placeholder.svg";
   const location =
-    listing.province?.name ?? listing.district?.name ?? listing.type ?? "";
+    listing.province?.name && listing.ward?.name
+      ? `${listing.ward.name}, ${listing.province.name}`
+      : listing.province?.name ?? listing.ward?.name ?? listing.type ?? "";
 
   return (
     <div className="border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-card">
@@ -75,11 +77,6 @@ export function HotelCard({ listing }: ListingCardProps) {
               {typeof listing.beds === "number" && (
                 <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
                   {listing.beds} giường
-                </span>
-              )}
-              {listing.hasFreeWifi && (
-                <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                  Wifi miễn phí
                 </span>
               )}
             </>
