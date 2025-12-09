@@ -186,6 +186,8 @@ model Reservation {
   // new: tổng tiền cho reservation (đơn vị: VND hoặc ứng với ứng dụng)
   totalPrice Float @default(0)
   
+  createdAt     DateTime  @default(now())
+  
   listingId String
   userId    String
 

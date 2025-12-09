@@ -95,7 +95,7 @@ async function createReservation(data: CreateReservationInput): Promise<Reservat
         phone,
         totalPrice,
         specialRequests: specialRequests ?? null,
-        status: ReservationStatus.ACTIVE,
+        status: ReservationStatus.ACTIVE, // Ensure status is set correctly
       },
     });
 
@@ -112,18 +112,25 @@ async function cancelReservation(reservationId: string): Promise<Reservation> {
     const existing = await tx.reservation.findUnique({ where: { id: reservationId } });
     if (!existing) throw new Error("Reservation not found");
 
-    if (existing.status === ReservationStatus.CANCELLED || existing.status === ReservationStatus.COMPLETED) {
-      // return the current reservation as-is (fresh from DB to ensure full typing)
-      return existing;
+    const now = new Date();
+    const bookingDate = new Date(existing.startDate); // Assuming startDate is when the booking was made
+    const timeDiff = now.getTime() - bookingDate.getTime();
+    const hoursDiff = timeDiff / (1000 * 3600);
+
+    if (hoursDiff > 24) {
+      throw new Error("Cannot cancel reservation after 24 hours.");
     }
 
-    // update reservation status to CANCELLED
+    if (existing.status === ReservationStatus.CANCELLED || existing.status === ReservationStatus.COMPLETED) {
+      return existing; // Return the current reservation as-is
+    }
+
     await tx.reservation.update({
       where: { id: reservationId },
       data: { status: ReservationStatus.CANCELLED },
     });
 
-    // if it was ACTIVE or BLOCKED, free the room
+    // Free the room if it was ACTIVE or BLOCKED
     if (existing.status === ReservationStatus.ACTIVE || existing.status === ReservationStatus.BLOCKED) {
       await tx.listing.update({
         where: { id: existing.listingId },
@@ -131,7 +138,6 @@ async function cancelReservation(reservationId: string): Promise<Reservation> {
       });
     }
 
-    // fetch updated reservation and return it to satisfy full Reservation type
     const updated = await tx.reservation.findUnique({ where: { id: reservationId } });
     if (!updated) throw new Error("Failed to fetch updated reservation");
     return updated;
@@ -259,6 +265,70 @@ async function getBookingsByUser(userId: string): Promise<(Reservation & { listi
   return rows as (Reservation & { listing?: { name?: string | null } | null })[];
 }
 
+/**
+ * Fetch a single booking by ID with full listing details.
+ * Returns null if not found or user doesn't have access.
+ */
+async function getBookingById(reservationId: string): Promise<
+  | (Reservation & {
+      listing: {
+        name: string;
+        type: string;
+        desc: string;
+        pricePerNight: number;
+        beds: number;
+        roomsAvailable: number;
+        imageUrls: string[];
+        thumbnail: string;
+        hasFreeWifi: boolean;
+        avgRating: number;
+        roomType: { name: string } | null;
+        province: { name: string } | null;
+        district: { name: string } | null;
+      } | null;
+      user: {
+        name: string | null;
+        email: string;
+      };
+    })
+  | null
+> {
+  await updateExpiredReservations();
+
+  const userId = await getUserId();
+  if (!userId) return null;
+
+  const booking = await prisma.reservation.findFirst({
+    where: {
+      id: reservationId,
+      userId, // ensure user can only view their own bookings
+    },
+    include: {
+      listing: {
+        include: {
+          roomType: {
+            select: { name: true },
+          },
+          province: {
+            select: { name: true },
+          },
+          district: {
+            select: { name: true },
+          },
+        },
+      },
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return booking;
+}
+
 export {
   createReservation,
   cancelReservation,
@@ -266,4 +336,5 @@ export {
   adminUnblockReservation,
   updateExpiredReservations,
   getBookingsByUser,
+  getBookingById,
 };

@@ -1,5 +1,5 @@
-import { createUser, getUserByEmail } from "@/app/_actions";
 
+import { createUser, getUserByEmail } from "@/app/_actions/user";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
