@@ -26,7 +26,7 @@ export function HotelList({
   hotels,
   title,
   pageIndex = 0,
-  pageSize = 12,
+  pageSize = 8,
   totalHotels,
   onPageChange,
   isLoading = false,
@@ -35,8 +35,17 @@ export function HotelList({
     typeof totalHotels === "number" ? totalHotels : hotels.length;
   const displayTitle = title || `Kết quả tìm kiếm (${totalCount} chỗ lưu trú)`;
 
-  // ✅ Data is already paginated from server, just display
-  const displayedHotels = hotels;
+  // Only show the correct page if data is not paginated from server
+  let displayedHotels = hotels;
+  if (
+    (!totalHotels || totalHotels === hotels.length) &&
+    hotels.length > pageSize
+  ) {
+    displayedHotels = hotels.slice(
+      pageIndex * pageSize,
+      (pageIndex + 1) * pageSize
+    );
+  }
 
   const effectiveTotal =
     typeof totalHotels === "number" ? totalHotels : hotels.length;
