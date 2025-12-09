@@ -5,12 +5,16 @@ import DashboardClient from "./DashboardClient";
 export default async function DashboardPage() {
   // fetch initial listings on the server using the action
   const newestListings = await getNewestListings();
+  const totalInitial = newestListings.length;
 
   return (
     <main className="min-h-screen bg-background">
       <DashboardHeader />
       {/* client-side interactive component receives server-fetched data */}
-      <DashboardClient initialListings={newestListings} />
+      <DashboardClient
+        initialListings={newestListings}
+        totalInitial={totalInitial}
+      />
     </main>
   );
 }
