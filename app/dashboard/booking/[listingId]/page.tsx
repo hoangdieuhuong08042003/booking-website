@@ -20,6 +20,7 @@ import {
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import { createReservation } from "@/app/_actions/reservation/reservation-actions";
 import { useSession } from "next-auth/react";
+import { redirectToCheckout } from "@/app/_utils/stripeService";
 import { useSearchParams, useParams } from "next/navigation";
 
 export default function BookingPage() {
@@ -108,26 +109,24 @@ export default function BookingPage() {
 
     const nightsCount = calculateNights();
 
-    const reservationPayload = {
-      listingId: listingId,
-      userId: session?.user?.id ?? "",
-      startDate: formData.checkIn ? new Date(formData.checkIn) : new Date(),
-      endDate: formData.checkOut ? new Date(formData.checkOut) : new Date(),
-      chargeId: `local_${Math.random().toString(36).substr(2, 9)}`,
-      daysDifference: nightsCount,
-      reservedDates: getReservedDates(formData.checkIn, formData.checkOut),
-      specialRequests: formData.specialRequests || null,
-      phone: formData.phone,
-      totalPrice: totalPrice,
-    };
-
     try {
-      await createReservation(reservationPayload);
-      setBookingConfirmed(true);
-      setSubmitting(false);
-      setTimeout(() => {
-        window.location.href = "/dashboard/mybookings";
-      }, 2000);
+      const listingData = {
+        name: hotelName,
+        pricePerNight: pricePerNight,
+        id: listingId,
+      };
+
+      await redirectToCheckout(
+        listingData,
+        formData.checkIn ? new Date(formData.checkIn) : new Date(),
+        formData.checkOut ? new Date(formData.checkOut) : new Date(),
+        nightsCount,
+        formData.phone,
+        formData.specialRequests,
+        formData.guests
+      );
+
+      setSubmitting(false); // In case redirect fails or is slow
     } catch (err: unknown) {
       console.error("Reservation error:", err);
       const errMsg =

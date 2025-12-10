@@ -10,20 +10,23 @@ const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY, {
 export async function POST(req) {
     try {
         const {
-            listing: { name, pricePerNight, id: listingId},
+            listing: { name, pricePerNight, id: listingId },
             startDate,
             endDate,
-            daysDifference
+            daysDifference,
+            phone,
+            specialRequests,
+            guests
         } = await req.json()
 
         const stripe_obj = [
             {
                 price_data: {
-                    currency: "usd",
+                    currency: "vnd",
                     product_data: {
-                      name
+                        name
                     },
-                    unit_amount: pricePerNight *100
+                    unit_amount: pricePerNight
                 },
                 quantity: daysDifference
             }
@@ -33,7 +36,7 @@ export async function POST(req) {
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
-            line_items : stripe_obj,
+            line_items: stripe_obj,
             mode: "payment",
             success_url: "http://localhost:3000/dashboard/success-page",
             cancel_url: "http://localhost:3000",
@@ -43,23 +46,26 @@ export async function POST(req) {
                 listingId,
                 pricePerNight,
                 daysDifference,
-                useId : currentUser.id,
-                email: currentUser.email
+                useId: currentUser.id,
+                email: currentUser.email,
+                phone,
+                specialRequests,
+                guests
             }
         })
 
-        return NextResponse.json({sessionId: session.id})
+        return NextResponse.json({ sessionId: session.id })
     } catch (error) {
         return NextResponse.json(
-      { message: error.message || "Internal Server Error" },
-      { status: 500 }
-    );
+            { message: error.message || "Internal Server Error" },
+            { status: 500 }
+        );
     }
 }
 
 export async function DELETE(req) {
     try {
-        const {searchParams} = new URL(req.url)
+        const { searchParams } = new URL(req.url)
         const chargeId = searchParams.get("charge_id")
         const reservationId = searchParams.get("reservation_id")
 
@@ -67,15 +73,15 @@ export async function DELETE(req) {
             charge: chargeId
         })
         console.log(refundedPayment)
-        if(refundedPayment.status !== "succeeded"){
+        if (refundedPayment.status !== "succeeded") {
             return NextResponse.error()
         }
-        return NextResponse.json({message: "Successfully cancelled the reservation"})
+        return NextResponse.json({ message: "Successfully cancelled the reservation" })
     } catch (error) {
-       return NextResponse.json(
-      { message: error.message || "Internal Server Error" },
-      { status: 500 }
-    );
-        
+        return NextResponse.json(
+            { message: error.message || "Internal Server Error" },
+            { status: 500 }
+        );
+
     }
 }
