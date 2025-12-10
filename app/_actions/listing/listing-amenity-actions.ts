@@ -33,9 +33,23 @@ async function removeAmenity(id: string) {
 	});
 }
 
+/**
+ * Lấy tất cả loại phòng (tĩnh)
+ */
+async function getRoomTypes() {
+	return await prisma.roomType.findMany({ select: { id: true, name: true } });
+}
+
+// Lấy tất cả tiện nghi
+async function getAmenity() {
+	return await prisma.amenity.findMany({ select: { id: true, name: true } });
+}
+
 export {
 	createAmenity,
 	listAmenities,
 	updateAmenity,
 	removeAmenity,
+	getRoomTypes,
+	getAmenity,
 };

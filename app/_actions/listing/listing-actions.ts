@@ -14,25 +14,27 @@ async function createListing(data: {
   pricePerNight: number;
   beds: number;
   imageUrls?: string[];
-  thumbnail: string; // <-- made required
-  hasFreeWifi?: boolean;
-  provinceId?: number | null;
-  districtId?: number | null;
-  amenityIds?: string[]; // <-- để tạo quan hệ tiện nghi
-  roomsAvailable?: number; // <-- new optional input
+  thumbnail: string;
+  provinceId?: string | null;   // <--- FIX
+  wardId?: string | null;       // <--- FIX
+  amenityIds?: string[];
+  roomsAvailable?: number;
 }) {
-  const { amenityIds, thumbnail, roomsAvailable, ...rest } = data;
-  // thumbnail is required by input/schema — use it directly
-  const computedThumbnail = thumbnail;
+  const { amenityIds, thumbnail, roomsAvailable, provinceId, wardId, ...rest } = data;
 
   const created = await prisma.listing.create({
     data: {
       ...rest,
       imageUrls: rest.imageUrls ?? [],
-      thumbnail: computedThumbnail,
-      roomsAvailable: roomsAvailable ?? 0, // persist roomsAvailable
+      thumbnail,
+      roomsAvailable: roomsAvailable ?? 0,
+
+      // 🔥 FIX LONG-TERM — correct Prisma relation creation
+      province: provinceId ? { connect: { id: provinceId } } : undefined,
+      ward: wardId ? { connect: { id: wardId } } : undefined,
+
       amenities:
-        amenityIds && amenityIds.length > 0
+        amenityIds?.length
           ? {
               create: amenityIds.map((amenityId) => ({
                 amenity: { connect: { id: amenityId } },
@@ -49,29 +51,24 @@ async function createListing(data: {
       beds: true,
       imageUrls: true,
       thumbnail: true,
-      hasFreeWifi: true,
       provinceId: true,
-      districtId: true,
+      wardId: true,
       avgRating: true,
-      roomsAvailable: true, // include new field in response
-      // trả về danh sách tiện nghi (id + name)
+      roomsAvailable: true,
       amenities: {
         select: {
-          amenity: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          amenity: { select: { id: true, name: true } },
         },
       },
-      // trả về thông tin tỉnh/quận (nếu cần)
       province: { select: { id: true, name: true } },
-      district: { select: { id: true, name: true } },
+      ward: { select: { id: true, name: true } },
+      
     },
   });
+
   return created;
 }
+
 
 // Thêm: lấy tất cả listings (không giới hạn số lượng)
 async function getNewestListings() {
@@ -86,13 +83,13 @@ async function getNewestListings() {
       beds: true,
       imageUrls: true,
       thumbnail: true,
-      hasFreeWifi: true,
       provinceId: true,
-      districtId: true,
+      wardId: true,
+      roomTypeId: true,
       avgRating: true,
       roomsAvailable: true,
       province: { select: { id: true, name: true } },
-      district: { select: { id: true, name: true } },
+      ward: { select: { id: true, name: true } },
       amenities: {
         select: {
           amenity: {
@@ -111,7 +108,7 @@ async function getNewestListings() {
 
 async function searchListings({
   provinceId,
-  districtId,
+  wardId,
   startDate,
   endDate,
   numGuests,
@@ -120,8 +117,8 @@ async function searchListings({
   type,
   selectedAmenities = [],
 }: {
-  provinceId?: number;
-  districtId?: number;
+  provinceId?: string;
+  wardId?: string;
   startDate?: Date;
   endDate?: Date;
   numGuests?: number;
@@ -154,10 +151,10 @@ const blockingStatus: ReservationStatus[] = [ReservationStatus.ACTIVE, Reservati
   // Fetch listings with reservations matching the above filter so we can compute availability
   const listings = await prisma.listing.findMany({
     where: {
-      provinceId: provinceId ?? undefined,
-      districtId: districtId ?? undefined,
+      provinceId,
+      wardId,
       beds: minBeds ? { gte: minBeds } : undefined,
-      type: type ?? undefined,
+      type,
       pricePerNight:
         minPrice !== undefined || maxPrice !== undefined
           ? { gte: minPrice ?? 0, lte: maxPrice ?? 999999999 }
@@ -168,7 +165,7 @@ const blockingStatus: ReservationStatus[] = [ReservationStatus.ACTIVE, Reservati
     },
     include: {
       province: true,
-      district: true,
+      ward: true,
       amenities: { include: { amenity: true } },
       // include only overlapping (or future) reservations that actually block rooms
       reservations: { where: { AND: [reservationDateWhere, { status: { in: blockingStatus } }] }, select: { id: true } },
@@ -198,11 +195,122 @@ async function getListingById(listingId: string) {
     where: { id: listingId },
     include: {
       province: true,
-      district: true,
+      ward: true,
+    
       amenities: { include: { amenity: true } },
     },
   });
   return listing;
+}
+
+/**
+ * Lọc listings theo nhiều trường filter (tương tự getPlansByFilter)
+ */
+async function getListingByFilter({
+  title,
+  type,
+  provinceId,
+  wardId,
+  priceRange,
+  selectedAmenities,
+  guests,
+  pageIndex = 0,
+  pageSize = 20,
+  roomTypeId,
+}: {
+  title?: string;
+  type?: string;
+  provinceId?: string;
+  wardId?: string;
+  priceRange?: [number, number];
+  selectedAmenities?: string[];
+  guests?: number;
+  pageIndex?: number;
+  pageSize?: number;
+  roomTypeId?: string;
+}) {
+  let minBeds: number | undefined;
+  if (guests) {
+    minBeds = Math.ceil(guests / 2);
+  }
+
+  const where: Prisma.ListingWhereInput = {
+    ...(title
+      ? { name: { contains: title, mode: "insensitive" } }
+      : {}),
+    ...(type ? { type } : {}),
+    ...(roomTypeId ? { roomTypeId } : {}),
+    ...(provinceId ? { provinceId } : {}),
+    ...(wardId ? { wardId } : {}),
+    ...(minBeds ? { beds: { gte: minBeds } } : {}),
+    ...(priceRange
+      ? { pricePerNight: { gte: priceRange[0], lte: priceRange[1] } }
+      : {}),
+    ...(selectedAmenities && selectedAmenities.length
+      ? {
+          amenities: {
+            some: {
+              amenity: { name: { in: selectedAmenities } },
+            },
+          },
+        }
+      : {}),
+  };
+
+  // ✅ Get total count for pagination
+  const total = await prisma.listing.count({ where });
+
+  // ✅ Fetch only the current page
+  const listings = await prisma.listing.findMany({
+    where,
+    orderBy: { avgRating: "desc" },
+    skip: pageIndex * pageSize,
+    take: pageSize,
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      desc: true,
+      pricePerNight: true,
+      beds: true,
+      imageUrls: true,
+      thumbnail: true,
+      provinceId: true,
+      wardId: true,
+      roomTypeId: true,
+      avgRating: true,
+      roomsAvailable: true,
+      province: { select: { id: true, name: true } },
+      ward: { select: { id: true, name: true } },
+      amenities: {
+        select: {
+          amenity: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // ✅ Return structure: { listings: [...], total: number }
+  return { listings, total };
+}
+
+/**
+ * Lấy min/max price của tất cả listings
+ */
+async function getListingPriceRange() {
+  const [minResult, maxResult] = await Promise.all([
+    prisma.listing.aggregate({ _min: { pricePerNight: true } }),
+    prisma.listing.aggregate({ _max: { pricePerNight: true } }),
+  ]);
+  return {
+    min: minResult._min.pricePerNight ?? 0,
+    max: maxResult._max.pricePerNight ?? 10000000,
+  };
 }
 
 // (REMOVE) createReservation implementation moved to reservation-actions.ts
@@ -212,5 +320,6 @@ export {
   getNewestListings,
   searchListings,
   getListingById,
-  // createReservation removed from here
+  getListingByFilter,
+  getListingPriceRange,
 };

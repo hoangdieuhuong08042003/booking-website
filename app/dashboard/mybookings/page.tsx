@@ -1,6 +1,6 @@
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import Link from "next/link";
-import { Calendar } from "lucide-react";
+import { Calendar, DollarSign, ChevronRight } from "lucide-react";
 import { getBookingsByUser } from "@/app/_actions/reservation/reservation-actions";
 import { getUserId } from "@/app/_actions/user/get-user";
 import type { Reservation } from "@prisma/client";
@@ -54,57 +54,82 @@ export default async function BookingsPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 max-w-6xl justify-center mx-auto">
             {bookings.map((booking) => (
-              <div
+              <Link
                 key={booking.id}
-                className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition"
+                href={`/dashboard/mybookings/${booking.id}`}
+                className="block group"
               >
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-1">
-                      {booking.listing?.name ?? booking.listingId}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Booking ID: {booking.id}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-accent" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Thời gian lưu trú
-                      </p>
-                      <p className="font-medium">
-                        {new Date(booking.startDate).toLocaleDateString(
-                          "vi-VN"
-                        )}{" "}
-                        →{" "}
-                        {new Date(booking.endDate).toLocaleDateString("vi-VN")}
+                <div className="bg-card border border-border rounded-lg p-5 hover:shadow-md hover:border-primary/50 transition-all duration-200">
+                  {/* List Item Header - Title and ID */}
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors truncate">
+                        {booking.listing?.name ?? booking.listingId}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Booking ID: {booking.id}
                       </p>
                     </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary flex-shrink-0 transition-colors" />
                   </div>
 
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground mb-1">
-                      Tổng tiền
-                    </p>
-                    <p className="text-2xl font-bold text-accent">
-                      {booking.totalPrice.toLocaleString("vi-VN")} ₫
-                    </p>
-                  </div>
-                </div>
+                  {/* List Item Details - Grid for responsive layout */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    {/* Check-in/Check-out Dates */}
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground font-medium mb-0.5">
+                          Thời gian lưu trú
+                        </p>
+                        <p className="text-sm font-medium text-foreground">
+                          {new Date(booking.startDate).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(booking.endDate).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="pt-4 border-t border-border flex gap-2">
-                  <div className="text-sm text-muted-foreground flex-1">
-                    <span className="font-medium text-foreground">
-                      {/* show user info if available */}
-                    </span>
+                    {/* Night Count */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded-full bg-primary/20 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground font-medium mb-0.5">
+                          Số đêm
+                        </p>
+                        <p className="text-sm font-medium text-foreground">
+                          {Math.ceil(
+                            (new Date(booking.endDate).getTime() -
+                              new Date(booking.startDate).getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          )}{" "}
+                          đêm
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Total Price */}
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="w-4 h-4 text-primary flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground font-medium mb-0.5">
+                          Tổng tiền
+                        </p>
+                        <p className="text-sm font-bold text-primary">
+                          {booking.totalPrice.toLocaleString("vi-VN")} ₫
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  {/* Hủy booking có thể được thêm sau bằng server action */}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

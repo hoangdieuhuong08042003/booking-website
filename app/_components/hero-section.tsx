@@ -52,7 +52,7 @@ export function HeroSection() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
             <Link
-              href="/auth/signup"
+              href="/auth/login"
               className="px-8 py-4 bg-gradient-to-r from-primary to-blue-500 text-white font-semibold rounded-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2 group"
             >
               Bắt Đầu Tìm Phòng

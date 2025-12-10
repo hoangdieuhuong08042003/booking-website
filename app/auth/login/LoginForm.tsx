@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 
-import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -40,16 +39,14 @@ export default function LoginForm() {
       });
       if (!result) return;
       if (result.error) {
-        setError("メールアドレスまたはパスワードが正しくありません。");
+        setError("Email hoặc mật khẩu không chính xác.");
         setLoading(false);
         return;
       }
       router.push(result.url || callbackUrl);
       router.refresh();
     } catch {
-      setError(
-        "ログイン中に問題が発生しました。しばらくしてからお試しください。"
-      );
+      setError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau.");
       setLoading(false);
     }
   }
@@ -58,37 +55,27 @@ export default function LoginForm() {
     <div className="w-full max-w-md space-y-0">
       <Card className="rounded-b-none">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 w-10">
-            <Image
-              src="/logo.png"
-              alt="logo"
-              width={64}
-              height={64}
-              className="h-10 w-10 rounded-md object-contain"
-              style={{
-                filter:
-                  "brightness(var(--logo-brightness)) contrast(var(--logo-contrast))",
-              }}
-            />
-          </div>
-          <CardTitle className="text-2xl font-bold">Takasho AI</CardTitle>
-          <CardDescription>AIチャットボットプラットフォーム</CardDescription>
+          <CardTitle className="text-2xl font-bold"> TravelHub</CardTitle>
+          <CardDescription>
+            {" "}
+            Tìm kiếm khách sạn sang trọng tuyệt vời
+          </CardDescription>
         </CardHeader>
       </Card>
       <Card className="rounded-t-none border-t-0">
         <CardContent className="px-8 py-8">
           <form onSubmit={onSubmit} className="space-y-4">
             <div className=" text-center">
-              <h2 className="text-2xl font-bold">ログイン</h2>
+              <h2 className="text-2xl font-bold">Đăng nhập</h2>
               <p className="text-muted-foreground mt-1 text-sm">
-                アカウント情報を入力してください
+                Vui lòng nhập thông tin tài khoản
               </p>
             </div>
             <div className="space-y-2 pt-2">
-              <label className="text-sm font-medium">メールアドレス</label>
+              <label className="text-sm font-medium">Email</label>
               <Input
                 type="email"
-                placeholder="m@example"
+                placeholder="gmail@example.com"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -98,12 +85,12 @@ export default function LoginForm() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">パスワード</label>
+                <label className="text-sm font-medium">Mật khẩu</label>
                 <Link
                   href="#"
                   className="text-sm text-blue-600 hover:underline"
                 >
-                  パスワードを忘れた方?
+                  Quên mật khẩu?
                 </Link>
               </div>
               <Input
@@ -124,26 +111,26 @@ export default function LoginForm() {
               className="w-full h-11 rounded-md"
               disabled={loading}
             >
-              {loading ? "ログイン中..." : "ログイン"}
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </Button>
 
             <Button
               type="button"
-              variant="outline"
-              className="w-full h-11 rounded-md bg-primary text-white"
+              variant="default"
+              className="w-full h-11 rounded-md bg-primary text-white "
               onClick={() => signIn("google", { callbackUrl })}
             >
               <FcGoogle className="size-6" />
-              <span>Googleでログイン</span>
+              <span>Đăng nhập bằng Google</span>
             </Button>
 
             <p className="text-muted-foreground mt-2 text-center text-sm">
-              アカウントをお持ちでない方は？{" "}
+              Chưa có tài khoản?{" "}
               <Link
                 href="/auth/register"
                 className="text-blue-600 hover:underline"
               >
-                新規登録
+                Đăng ký ngay
               </Link>
             </p>
           </form>
