@@ -21,6 +21,8 @@ import { DashboardHeader } from "@/app/_components/dashboard-header";
 import { useSession } from "next-auth/react";
 import { redirectToCheckout } from "@/app/_utils/stripeService";
 import { useSearchParams, useParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function BookingPage() {
   // read dynamic segment + query params from client router
@@ -55,6 +57,14 @@ export default function BookingPage() {
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
+
+  // Tính ngày min cho checkout (ngày checkin + 1)
+  const getMinCheckoutDate = () => {
+    if (!formData.checkIn) return today;
+    const checkInDate = new Date(formData.checkIn);
+    checkInDate.setDate(checkInDate.getDate() + 1);
+    return checkInDate.toISOString().split("T")[0];
+  };
 
   const calculateNights = () => {
     if (!formData.checkIn || !formData.checkOut) return 0;
@@ -242,30 +252,32 @@ export default function BookingPage() {
                     <label className="block text-sm font-medium mb-2">
                       Nhận phòng (Check-in)
                     </label>
-                    <input
+                    <Input
                       type="date"
                       required
                       min={today}
                       value={formData.checkIn}
                       onChange={(e) =>
-                        setFormData({ ...formData, checkIn: e.target.value })
+                        setFormData({
+                          ...formData,
+                          checkIn: e.target.value,
+                          checkOut: "",
+                        })
                       }
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Trả phòng (Check-out)
                     </label>
-                    <input
+                    <Input
                       type="date"
                       required
-                      min={formData.checkIn || today}
+                      min={getMinCheckoutDate()}
                       value={formData.checkOut}
                       onChange={(e) =>
                         setFormData({ ...formData, checkOut: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                 </div>
@@ -275,7 +287,7 @@ export default function BookingPage() {
                   <label className="block text-sm font-medium mb-2">
                     Số lượng khách
                   </label>
-                  <input
+                  <Input
                     type="number"
                     min="1"
                     max="10"
@@ -287,7 +299,6 @@ export default function BookingPage() {
                         guests: parseInt(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
@@ -297,7 +308,7 @@ export default function BookingPage() {
                     Thông tin khách hàng
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <input
+                    <Input
                       type="text"
                       placeholder="Họ"
                       required
@@ -305,9 +316,8 @@ export default function BookingPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, firstName: e.target.value })
                       }
-                      className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <input
+                    <Input
                       type="text"
                       placeholder="Tên"
                       required
@@ -315,14 +325,13 @@ export default function BookingPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, lastName: e.target.value })
                       }
-                      className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                 </div>
 
                 {/* Contact Info */}
                 <div className="grid grid-cols-2 gap-4">
-                  <input
+                  <Input
                     type="email"
                     placeholder="Email"
                     required
@@ -330,9 +339,8 @@ export default function BookingPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
-                  <input
+                  <Input
                     type="tel"
                     placeholder="Số điện thoại"
                     required
@@ -340,7 +348,6 @@ export default function BookingPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
@@ -349,7 +356,7 @@ export default function BookingPage() {
                   <label className="block text-sm font-medium mb-2">
                     Yêu cầu đặc biệt (Tùy chọn)
                   </label>
-                  <textarea
+                  <Textarea
                     value={formData.specialRequests}
                     onChange={(e) =>
                       setFormData({
@@ -358,7 +365,6 @@ export default function BookingPage() {
                       })
                     }
                     placeholder="Ví dụ: Yêu cầu phòng cao tầng, tặng sinh nhật..."
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     rows={4}
                   />
                 </div>
