@@ -18,9 +18,11 @@ import {
   Phone,
 } from "lucide-react";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
-import { createReservation } from "@/app/_actions/reservation/reservation-actions";
 import { useSession } from "next-auth/react";
+import { redirectToCheckout } from "@/app/_utils/stripeService";
 import { useSearchParams, useParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function BookingPage() {
   // read dynamic segment + query params from client router
@@ -49,34 +51,27 @@ export default function BookingPage() {
     specialRequests: "",
   });
 
-  const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [bookingConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
 
-  const formatDateInt = (d: Date) =>
-    parseInt(d.toISOString().slice(0, 10).replace(/-/g, ""));
-
-  const getReservedDates = (checkInStr: string, checkOutStr: string) => {
-    if (!checkInStr || !checkOutStr) return [] as number[];
-    const arr: number[] = [];
-    const cur = new Date(checkInStr);
-    const end = new Date(checkOutStr);
-    cur.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    while (cur < end) {
-      arr.push(formatDateInt(new Date(cur)));
-      cur.setDate(cur.getDate() + 1);
-    }
-    return arr;
+  // Tính ngày min cho checkout (ngày checkin + 1)
+  const getMinCheckoutDate = () => {
+    if (!formData.checkIn) return today;
+    const checkInDate = new Date(formData.checkIn);
+    checkInDate.setDate(checkInDate.getDate() + 1);
+    return checkInDate.toISOString().split("T")[0];
   };
 
   const calculateNights = () => {
     if (!formData.checkIn || !formData.checkOut) return 0;
     const check_in = new Date(formData.checkIn);
     const check_out = new Date(formData.checkOut);
+    // Ensure check_out > check_in
+    if (check_out <= check_in) return 0;
     return Math.ceil(
       (check_out.getTime() - check_in.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -101,33 +96,52 @@ export default function BookingPage() {
     }));
   }, [session]);
 
+  // Validate check-in/check-out logic
+  const isDateValid =
+    formData.checkIn &&
+    formData.checkOut &&
+    new Date(formData.checkOut) > new Date(formData.checkIn);
+
+  // Validate guests vs beds (assume 1 bed = 2 guests)
+  const maxGuests = Math.floor(
+    (searchParams?.get("beds") ? Number(searchParams.get("beds")) : 1) * 2
+  );
+  const isGuestsValid = formData.guests <= maxGuests;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+
+    // Validate guests vs beds before submit
+    if (!isGuestsValid) {
+      setErrorMsg(
+        `Số lượng khách vượt quá số giường (${maxGuests} khách tối đa).`
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     const nightsCount = calculateNights();
 
-    const reservationPayload = {
-      listingId: listingId,
-      userId: session?.user?.id ?? "",
-      startDate: formData.checkIn ? new Date(formData.checkIn) : new Date(),
-      endDate: formData.checkOut ? new Date(formData.checkOut) : new Date(),
-      chargeId: `local_${Math.random().toString(36).substr(2, 9)}`,
-      daysDifference: nightsCount,
-      reservedDates: getReservedDates(formData.checkIn, formData.checkOut),
-      specialRequests: formData.specialRequests || null,
-      phone: formData.phone,
-      totalPrice: totalPrice,
-    };
-
     try {
-      await createReservation(reservationPayload);
-      setBookingConfirmed(true);
-      setSubmitting(false);
-      setTimeout(() => {
-        window.location.href = "/dashboard/mybookings";
-      }, 2000);
+      const listingData = {
+        name: hotelName,
+        pricePerNight: pricePerNight,
+        id: listingId,
+      };
+
+      await redirectToCheckout(
+        listingData,
+        formData.checkIn ? new Date(formData.checkIn) : new Date(),
+        formData.checkOut ? new Date(formData.checkOut) : new Date(),
+        nightsCount,
+        formData.phone,
+        formData.specialRequests,
+        formData.guests
+      );
+
+      setSubmitting(false); // In case redirect fails or is slow
     } catch (err: unknown) {
       console.error("Reservation error:", err);
       const errMsg =
@@ -246,30 +260,32 @@ export default function BookingPage() {
                     <label className="block text-sm font-medium mb-2">
                       Nhận phòng (Check-in)
                     </label>
-                    <input
+                    <Input
                       type="date"
                       required
                       min={today}
                       value={formData.checkIn}
                       onChange={(e) =>
-                        setFormData({ ...formData, checkIn: e.target.value })
+                        setFormData({
+                          ...formData,
+                          checkIn: e.target.value,
+                          checkOut: "",
+                        })
                       }
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Trả phòng (Check-out)
                     </label>
-                    <input
+                    <Input
                       type="date"
                       required
-                      min={formData.checkIn || today}
+                      min={getMinCheckoutDate()}
                       value={formData.checkOut}
                       onChange={(e) =>
                         setFormData({ ...formData, checkOut: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                 </div>
@@ -279,7 +295,7 @@ export default function BookingPage() {
                   <label className="block text-sm font-medium mb-2">
                     Số lượng khách
                   </label>
-                  <input
+                  <Input
                     type="number"
                     min="1"
                     max="10"
@@ -291,7 +307,6 @@ export default function BookingPage() {
                         guests: parseInt(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
@@ -301,7 +316,7 @@ export default function BookingPage() {
                     Thông tin khách hàng
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <input
+                    <Input
                       type="text"
                       placeholder="Họ"
                       required
@@ -309,9 +324,8 @@ export default function BookingPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, firstName: e.target.value })
                       }
-                      className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <input
+                    <Input
                       type="text"
                       placeholder="Tên"
                       required
@@ -319,14 +333,13 @@ export default function BookingPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, lastName: e.target.value })
                       }
-                      className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                 </div>
 
                 {/* Contact Info */}
                 <div className="grid grid-cols-2 gap-4">
-                  <input
+                  <Input
                     type="email"
                     placeholder="Email"
                     required
@@ -334,9 +347,8 @@ export default function BookingPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
-                  <input
+                  <Input
                     type="tel"
                     placeholder="Số điện thoại"
                     required
@@ -344,7 +356,6 @@ export default function BookingPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
@@ -353,7 +364,7 @@ export default function BookingPage() {
                   <label className="block text-sm font-medium mb-2">
                     Yêu cầu đặc biệt (Tùy chọn)
                   </label>
-                  <textarea
+                  <Textarea
                     value={formData.specialRequests}
                     onChange={(e) =>
                       setFormData({
@@ -362,7 +373,6 @@ export default function BookingPage() {
                       })
                     }
                     placeholder="Ví dụ: Yêu cầu phòng cao tầng, tặng sinh nhật..."
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     rows={4}
                   />
                 </div>
@@ -370,10 +380,16 @@ export default function BookingPage() {
                 {errorMsg && (
                   <div className="text-sm text-red-600">{errorMsg}</div>
                 )}
+                {!isGuestsValid && (
+                  <div className="text-sm text-red-600">
+                    Số lượng khách vượt quá số giường ({maxGuests} khách tối
+                    đa).
+                  </div>
+                )}
 
                 <Button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !isDateValid || !isGuestsValid}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg"
                 >
                   {submitting ? "Đang xử lý..." : "Xác nhận và thanh toán"}

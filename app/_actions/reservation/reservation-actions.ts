@@ -58,13 +58,17 @@ async function createReservation(data: CreateReservationInput): Promise<Reservat
     phone,
     totalPrice,
     specialRequests,
+    userId: inputUserId, // get userId from input
   } = data;
 
   // ensure expired reservations are finalized before attempting to book
   await updateExpiredReservations();
 
-  // get authenticated user (server truth)
-  const userId = await getUserId();
+  // Prefer userId from Stripe metadata, fallback to authenticated user
+  let userId = inputUserId;
+  if (!userId) {
+    userId = await getUserId();
+  }
   if (!userId) {
     throw new Error("認証が必要です。ログインしてください。");
   }

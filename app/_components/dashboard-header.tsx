@@ -3,8 +3,11 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { UserButton } from "./user-button";
+import { usePathname } from "next/navigation";
 
 export function DashboardHeader() {
+  const pathname = usePathname();
+
   return (
     <header className="border-b border-border bg-background sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -16,10 +19,18 @@ export function DashboardHeader() {
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/dashboard">
-            <Button variant="ghost">Tìm kiếm</Button>
+            <Button variant={pathname === "/dashboard" ? "secondary" : "ghost"}>
+              Tìm kiếm
+            </Button>
           </Link>
           <Link href="/dashboard/mybookings">
-            <Button variant="ghost">Booking của tôi</Button>
+            <Button
+              variant={
+                pathname === "/dashboard/mybookings" ? "secondary" : "ghost"
+              }
+            >
+              Booking của tôi
+            </Button>
           </Link>
 
           <UserButton />
