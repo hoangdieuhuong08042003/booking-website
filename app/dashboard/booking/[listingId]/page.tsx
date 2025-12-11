@@ -18,7 +18,6 @@ import {
   Phone,
 } from "lucide-react";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
-import { createReservation } from "@/app/_actions/reservation/reservation-actions";
 import { useSession } from "next-auth/react";
 import { redirectToCheckout } from "@/app/_utils/stripeService";
 import { useSearchParams, useParams } from "next/navigation";
@@ -50,34 +49,19 @@ export default function BookingPage() {
     specialRequests: "",
   });
 
-  const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [bookingConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
 
-  const formatDateInt = (d: Date) =>
-    parseInt(d.toISOString().slice(0, 10).replace(/-/g, ""));
-
-  const getReservedDates = (checkInStr: string, checkOutStr: string) => {
-    if (!checkInStr || !checkOutStr) return [] as number[];
-    const arr: number[] = [];
-    const cur = new Date(checkInStr);
-    const end = new Date(checkOutStr);
-    cur.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    while (cur < end) {
-      arr.push(formatDateInt(new Date(cur)));
-      cur.setDate(cur.getDate() + 1);
-    }
-    return arr;
-  };
-
   const calculateNights = () => {
     if (!formData.checkIn || !formData.checkOut) return 0;
     const check_in = new Date(formData.checkIn);
     const check_out = new Date(formData.checkOut);
+    // Ensure check_out > check_in
+    if (check_out <= check_in) return 0;
     return Math.ceil(
       (check_out.getTime() - check_in.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -102,9 +86,22 @@ export default function BookingPage() {
     }));
   }, [session]);
 
+  // Validate check-in/check-out logic
+  const isDateValid =
+    formData.checkIn &&
+    formData.checkOut &&
+    new Date(formData.checkOut) > new Date(formData.checkIn);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+
+    // Check-out must be after check-in
+    if (!isDateValid) {
+      setErrorMsg("Ngày trả phòng phải sau ngày nhận phòng.");
+      return;
+    }
+
     setSubmitting(true);
 
     const nightsCount = calculateNights();
@@ -372,11 +369,16 @@ export default function BookingPage() {
 
                 <Button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !isDateValid}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg"
                 >
                   {submitting ? "Đang xử lý..." : "Xác nhận và thanh toán"}
                 </Button>
+                {!isDateValid && (
+                  <div className="text-sm text-red-600 mt-2">
+                    Ngày trả phòng phải sau ngày nhận phòng.
+                  </div>
+                )}
               </form>
             </div>
           </div>
