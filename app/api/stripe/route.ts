@@ -1,10 +1,8 @@
 import { getCurrentUser } from "@/lib/currentUser";
 import { NextResponse } from "next/server";
-import { useId } from "react";
 import Stripe from "stripe"
-import { email } from "zod";
-const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY, {
-    apiVersion: ""
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-11-17.clover"
 })
 
 export async function POST(req) {
@@ -26,7 +24,7 @@ export async function POST(req) {
                     product_data: {
                         name
                     },
-                    unit_amount: pricePerNight
+                      unit_amount: pricePerNight 
                 },
                 quantity: daysDifference
             }
@@ -67,7 +65,6 @@ export async function DELETE(req) {
     try {
         const { searchParams } = new URL(req.url)
         const chargeId = searchParams.get("charge_id")
-        const reservationId = searchParams.get("reservation_id")
 
         const refundedPayment = await stripe.refunds.create({
             charge: chargeId

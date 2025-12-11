@@ -1,16 +1,16 @@
 import { getDatesInRange } from "@/lib/dateToMilliseconds";
-import { prisma } from "@/lib/prisma";
+import { createReservation } from "@/app/_actions/reservation/reservation-actions";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import Stripe from "stripe"; // ES module import
 
-const { default: Stripe } = require("stripe");
 const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY, {
-    apiVersion: "2025-10-29.clover"
+    apiVersion: "2025-11-17.clover"
 })
 
 export async function POST(req) {
     try {
-        const h = await headers(); // await headers() trước
+        const h = await headers();
         const sig = h.get("stripe-signature");
 
         const body = await req.text()
@@ -30,7 +30,11 @@ export async function POST(req) {
             const session = event.data.object
             const paymentIntentId = session.payment_intent
             const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-            const chargeId = paymentIntent.latest_charge
+            // Ensure chargeId is a string
+            let chargeId = paymentIntent.latest_charge;
+            if (typeof chargeId === "object" && chargeId !== null && "id" in chargeId) {
+                chargeId = chargeId.id;
+            }
 
             const {
                 startDate,
@@ -45,23 +49,22 @@ export async function POST(req) {
 
             const reservedDates = getDatesInRange(startDate, endDate)
 
+            // Use createReservation action
             const reservationData = {
                 userId: useId,
                 listingId,
-                startDate,
-                endDate,
-                chargeId,
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
+                chargeId: String(chargeId), // ensure string
                 reservedDates,
                 daysDifference: Number(daysDifference),
                 phone: phone || "",
                 specialRequests: specialRequests || null,
                 totalPrice: Number(daysDifference) * Number(pricePerNight),
-                status: "ACTIVE"
             }
             console.log('reservationData', reservationData);
-            const newReservation = await prisma.reservation.create({
-                data: reservationData
-            })
+
+            const newReservation = await createReservation(reservationData);
 
             // Send email functionality
             return NextResponse.json(newReservation)

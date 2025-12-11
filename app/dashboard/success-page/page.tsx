@@ -1,13 +1,37 @@
-'use client'
-import React from 'react'
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
-export const SuccessPage = () => {
+export default function SuccessPage() {
+  const [open, setOpen] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => {
+      setOpen(false);
+      router.replace("/dashboard/mybookings");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [open, router]);
+
   return (
-    <div className="h-screen w-full">
-        <h2 className="mt-24 text-center font-bold text-3xl text-slate-700">
-          You've succsessfully reserved your hotel!
-        </h2>
-    </div>
-  )
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Thanh toán thành công!</DialogTitle>
+          <DialogDescription>
+            Cảm ơn bạn đã đặt phòng. Đang chuyển về trang booking của bạn...
+          </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
 }
- export default SuccessPage
