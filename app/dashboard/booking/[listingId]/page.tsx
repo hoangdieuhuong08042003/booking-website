@@ -102,13 +102,21 @@ export default function BookingPage() {
     formData.checkOut &&
     new Date(formData.checkOut) > new Date(formData.checkIn);
 
+  // Validate guests vs beds (assume 1 bed = 2 guests)
+  const maxGuests = Math.floor(
+    (searchParams?.get("beds") ? Number(searchParams.get("beds")) : 1) * 2
+  );
+  const isGuestsValid = formData.guests <= maxGuests;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
-    // Check-out must be after check-in
-    if (!isDateValid) {
-      setErrorMsg("Ngày trả phòng phải sau ngày nhận phòng.");
+    // Validate guests vs beds before submit
+    if (!isGuestsValid) {
+      setErrorMsg(
+        `Số lượng khách vượt quá số giường (${maxGuests} khách tối đa).`
+      );
       return;
     }
 
@@ -372,19 +380,20 @@ export default function BookingPage() {
                 {errorMsg && (
                   <div className="text-sm text-red-600">{errorMsg}</div>
                 )}
+                {!isGuestsValid && (
+                  <div className="text-sm text-red-600">
+                    Số lượng khách vượt quá số giường ({maxGuests} khách tối
+                    đa).
+                  </div>
+                )}
 
                 <Button
                   type="submit"
-                  disabled={submitting || !isDateValid}
+                  disabled={submitting || !isDateValid || !isGuestsValid}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg"
                 >
                   {submitting ? "Đang xử lý..." : "Xác nhận và thanh toán"}
                 </Button>
-                {!isDateValid && (
-                  <div className="text-sm text-red-600 mt-2">
-                    Ngày trả phòng phải sau ngày nhận phòng.
-                  </div>
-                )}
               </form>
             </div>
           </div>

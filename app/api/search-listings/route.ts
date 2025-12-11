@@ -16,20 +16,20 @@ export async function POST(req: Request) {
   } = body;
 
   // try to resolve a province by id first (if location is numeric), otherwise by name
-  let provinceId: number | undefined;
+  let provinceId: string | undefined;
   if (location !== undefined && location !== null) {
     // if location is already a number or a numeric string, use it directly
     if (
       typeof location === "number" ||
       (/^\d+$/.test(String(location).trim()))
     ) {
-      provinceId = Number(location);
+      provinceId = String(location);
     } else if (typeof location === "string" && location.trim().length > 0) {
       const province = await prisma.province.findFirst({
         where: { name: { contains: location.trim(), mode: "insensitive" } },
         select: { id: true },
       });
-      provinceId = province?.id;
+      provinceId = province?.id ? String(province.id) : undefined;
     }
   }
 
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
   const results = await searchListings({
     provinceId,
-    districtId: undefined,
+    wardId: undefined,
     startDate,
     endDate,
     numGuests: guests,
