@@ -8,9 +8,11 @@ import ReviewPrompt from "./review-prompt";
 export default async function BookingDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const booking = await getBookingById(params.id);
+  const { id } = await params;
+
+  const booking = await getBookingById(id);
 
   if (!booking) {
     notFound();
@@ -28,8 +30,11 @@ export default async function BookingDetailPage({
             ← Quay lại danh sách booking
           </Link>
         </div>
+
         <BookingDetailClient booking={booking} />
-        <ReviewPrompt booking={booking} />
+
+        {/* ❗ Chỉ render ReviewPrompt khi cần */}
+        {booking.status === "COMPLETED" && <ReviewPrompt booking={booking} />}
       </div>
     </main>
   );

@@ -61,24 +61,39 @@ export async function POST(req) {
     }
 }
 
-export async function DELETE(req) {
-    try {
-        const { searchParams } = new URL(req.url)
-        const chargeId = searchParams.get("charge_id")
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const paymentIntentId = searchParams.get("charge_id");
 
-        const refundedPayment = await stripe.refunds.create({
-            charge: chargeId
-        })
-        console.log(refundedPayment)
-        if (refundedPayment.status !== "succeeded") {
-            return NextResponse.error()
-        }
-        return NextResponse.json({ message: "Successfully cancelled the reservation" })
-    } catch (error) {
-        return NextResponse.json(
-            { message: error.message || "Internal Server Error" },
-            { status: 500 }
-        );
-
+    if (!paymentIntentId) {
+      return NextResponse.json(
+        { message: "Missing payment intent id" },
+        { status: 400 }
+      );
     }
+
+    const refundedPayment = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+    });
+
+    if (refundedPayment.status !== "succeeded") {
+      return NextResponse.json(
+        { message: "Refund failed" },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      message: "Successfully cancelled the reservation",
+      refundId: refundedPayment.id,
+    });
+  } catch (error) {
+    console.error("Stripe refund error:", error);
+
+    return NextResponse.json(
+      { message: error.message || "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }

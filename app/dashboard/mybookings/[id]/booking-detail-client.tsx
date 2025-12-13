@@ -9,6 +9,7 @@ import {
   FileText,
   CreditCard,
 } from "lucide-react";
+import axios from "axios";
 import Image from "next/image";
 import { useState } from "react";
 import { cancelReservation } from "@/app/_actions/reservation/reservation-actions";
@@ -89,6 +90,12 @@ export default function BookingDetailClient({
     setError(null);
 
     try {
+      // 1. Process Refund via Stripe
+      await axios.delete(
+        `/api/stripe?charge_id=${booking.chargeId}&reservation_id=${booking.id}`
+      );
+
+      // 2. Mark as Cancelled in DB
       await cancelReservation(booking.id);
       setCancelled(true);
       setOpenConfirmDialog(false);
