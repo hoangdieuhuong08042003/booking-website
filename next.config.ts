@@ -34,6 +34,10 @@ const nextConfig: NextConfig = {
         hostname: "images.pexels.com",
         pathname: "/**",
       },
+        {
+        protocol: "https",
+        hostname: "example.com",
+      },
       {
         protocol: "https",
         hostname: `${process.env.CLOUDINARY_CLOUD_NAME}.res.cloudinary.com`,
