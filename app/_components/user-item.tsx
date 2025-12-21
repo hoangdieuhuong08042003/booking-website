@@ -15,7 +15,7 @@ export const UserItem = ({ avatarSrc, name, mail, onClick }: UserCardProps) => {
       className="flex items-center justify-center space-x-3 p-2"
       onClick={onClick}
     >
-      {/* Avatar */}
+      {/* Ảnh đại diện */}
       <div className="w-12 h-12">
         <Avatar className="size-12 hover:opacity-75 transition">
           <AvatarImage src={avatarSrc ?? ""} alt={avatarFallback} />
@@ -24,7 +24,7 @@ export const UserItem = ({ avatarSrc, name, mail, onClick }: UserCardProps) => {
           </AvatarFallback>
         </Avatar>
       </div>
-      {/* User Info */}
+      {/* Thông tin người dùng */}
       <div>
         <p className="text-black font-semibold dark:text-white">{name}</p>
         <p className="text-gray-500 text-sm dark:text-white">{mail}</p>
