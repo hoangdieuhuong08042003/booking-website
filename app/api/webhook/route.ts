@@ -29,12 +29,8 @@ export async function POST(req) {
         if (event.type === "checkout.session.completed") {
             const session = event.data.object
             const paymentIntentId = session.payment_intent
-            const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-            // Ensure chargeId is a string
-            let chargeId = paymentIntent.latest_charge;
-            if (typeof chargeId === "object" && chargeId !== null && "id" in chargeId) {
-                chargeId = chargeId.id;
-            }
+            // Store PaymentIntent ID instead of Charge ID for easier refunding (since Checkout sessions use PI)
+            const chargeId = paymentIntentId;
 
             const {
                 startDate,
@@ -55,7 +51,7 @@ export async function POST(req) {
                 listingId,
                 startDate: new Date(startDate),
                 endDate: new Date(endDate),
-                chargeId: String(chargeId), // ensure string
+                chargeId: String(chargeId),
                 reservedDates,
                 daysDifference: Number(daysDifference),
                 phone: phone || "",
