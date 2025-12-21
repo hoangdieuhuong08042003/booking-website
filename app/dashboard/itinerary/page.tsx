@@ -8,14 +8,15 @@ import {
   ACTIVITIES,
   PHYSICAL_TYPE,
 } from "@/constants/keywords";
-import { useItinerary } from "@/app/hooks/useItinerary";
 import { Sparkles } from "lucide-react";
 import InputCard from "./components/InputCard";
 import KeywordGroup from "./components/KeywordGroup";
 import ItineraryHeader from "./components/ItineraryHeader";
 import { DayPlan } from "./types";
 import DayCard from "./components/DayCard";
+import RecommendCard from "./components/RecommendCard";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
+import { useTourismApi } from "@/app/hooks/useItinerary";
 
 export default function ItineraryPage() {
   const [province, setProvince] = useState("Huế");
@@ -23,7 +24,15 @@ export default function ItineraryPage() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [imgFallback, setImgFallback] = useState<Record<string, boolean>>({});
 
-  const { itinerary, loading, fetchItinerary } = useItinerary();
+  // const { itinerary, loading, fetchItinerary } = useItinerary();
+  const {
+    itinerary,
+    itineraryLoading,
+    fetchItinerary,
+    recommendLoading,
+    fetchRecommendations,
+    recommendations,
+  } = useTourismApi();
 
   const toggleKeyword = (k: string) => {
     setKeywords((prev) =>
@@ -77,8 +86,10 @@ export default function ItineraryPage() {
               days={days}
               setDays={setDays}
               keywords={keywords}
-              loading={loading}
+              loading={itineraryLoading}
               fetchItinerary={fetchItinerary}
+              fetchRecommendations={fetchRecommendations}
+              recommendLoading={recommendLoading}
             />
           </motion.div>
 
@@ -146,6 +157,35 @@ export default function ItineraryPage() {
             </motion.div>
           )}
         </AnimatePresence>
+        {/* Recommend Section */}
+        {recommendations && recommendations.danh_sách_địa_điểm?.length > 0 && (
+          <div className="mt-12 space-y-6">
+            <h2 className="text-2xl font-bold text-foreground">
+              Gợi ý địa điểm nổi bật
+            </h2>
+            {/* Weather summary */}
+            {recommendations.thông_tin_thời_tiết && (
+              <div className="mb-2 text-base text-muted-foreground">
+                <span className="font-medium">Thời tiết:</span>{" "}
+                {recommendations.thông_tin_thời_tiết}
+              </div>
+            )}
+            <div className="flex flex-col gap-6">
+              {recommendations.danh_sách_địa_điểm.map((place, idx) => (
+                <RecommendCard
+                  key={place.tên + idx}
+                  place={place}
+                  imgFallback={imgFallback}
+                  setImgFallback={setImgFallback}
+                  // Chỉ truyền weatherSummary cho card đầu tiên nếu muốn
+                  weatherSummary={
+                    idx === 0 ? recommendations.thông_tin_thời_tiết : undefined
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
