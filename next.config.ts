@@ -8,41 +8,13 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "plus.unsplash.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "source.unsplash.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "images.pexels.com",
-        pathname: "/**",
-      },
-        {
-        protocol: "https",
-        hostname: "example.com",
-      },
-      {
-        protocol: "https",
-        hostname: `${process.env.CLOUDINARY_CLOUD_NAME}.res.cloudinary.com`,
-        pathname: "/**",
-      },
+    domains: [
+      "res.cloudinary.com", // ✅ Cloudinary
+      "plus.unsplash.com",
+      "images.unsplash.com",
+      "source.unsplash.com",
+      "lh3.googleusercontent.com",
+      "images.pexels.com",
     ],
   },
 };

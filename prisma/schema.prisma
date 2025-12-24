@@ -135,7 +135,7 @@ model Listing {
   name          String
   type          String
   desc          String
-  pricePerNight Float
+  pricePerNight Int
   beds          Int
   roomsAvailable Int       @default(0)
   imageUrls     String[]
@@ -155,6 +155,8 @@ model Listing {
   reviews      Review[]
   reservations Reservation[]
   amenities    ListingAmenity[]
+  // Thêm quan hệ ngược
+  images       ListingImage[]
 }
 
 // Đặt phòng
@@ -202,9 +204,23 @@ model Review {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+
+
+
+model ListingImage {
+  id        String @id @default(cuid())
+  listingId String
+  imageUrl  String
+  order     Int?   @default(0)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
 enum ReservationStatus {
   ACTIVE
   CANCELLED
   COMPLETED
   BLOCKED
 }
+
+// No changes needed; all fields are present and updatable via Prisma.

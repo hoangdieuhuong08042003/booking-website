@@ -40,7 +40,7 @@ export function HeroSection() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-accent">
                   Những Khách Sạn Tuyệt Vời
                 </span>{" "}
-                Trên Toàn Thế Giới
+                Ở Việt Nam
               </h1>
               <p className="text-lg sm:text-xl text-foreground/70 leading-relaxed">
                 Tìm kiếm, so sánh và đặt phòng tại hơn 500,000 khách sạn, resort

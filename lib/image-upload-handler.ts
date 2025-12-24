@@ -25,20 +25,20 @@ const generateImageFileName = (
 };
 
 
-async function uploadFileToS3(file: File): Promise<SignedURLResponse> {
-  // Validate
+async function uploadFileToCloudinary(file: File): Promise<SignedURLResponse> {
+  // Kiểm tra định dạng file
   if (!allowedFileTypes.includes(file.type)) {
-    return { failure: "ファイルタイプは許可されていません" };
+    return { failure: "Định dạng file không được hỗ trợ" };
   }
 
-  // 10MB
+  // Giới hạn 10MB
   if (file.size > 1048576 * 10) {
-    return { failure: "ファイルサイズが大きすぎます" };
+    return { failure: "Kích thước file quá lớn (tối đa 10MB)" };
   }
 
   const publicId = generateImageFileName(file.name);
 
-  // chuyển file sang base64 data URI
+  // Chuyển file sang base64 data URI
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   const base64 = buffer.toString("base64");
@@ -50,24 +50,24 @@ async function uploadFileToS3(file: File): Promise<SignedURLResponse> {
       resource_type: "image",
       overwrite: true,
     });
-    // trả về secure_url đầy đủ
+    // Trả về secure_url đầy đủ
     return { url: result.secure_url };
   } catch (err: unknown) {
     const getErrorMessage = (e: unknown) =>
-      e instanceof Error ? e.message : String(e ?? "Upload failed");
+      e instanceof Error ? e.message : String(e ?? "Tải lên thất bại");
     return { failure: getErrorMessage(err) };
   }
 }
 
-async function deleteFileFromS3(fileUrl: string): Promise<boolean> {
-  // Extract public_id from Cloudinary URL
+async function deleteFileFromCloudinary(fileUrl: string): Promise<boolean> {
+  // Lấy public_id từ URL Cloudinary
   const extractPublicIdFromUrl = (url: string) => {
     const parts = url.split("/upload/");
     if (parts.length < 2) return null;
     let rest = parts[1];
-    // remove version prefix v12345/ nếu có
+    // Xóa tiền tố version v12345/ nếu có
     rest = rest.replace(/^v\d+\//, "");
-    // remove extension
+    // Xóa extension
     const lastDot = rest.lastIndexOf(".");
     if (lastDot !== -1) rest = rest.substring(0, lastDot);
     return rest;
@@ -87,21 +87,26 @@ async function deleteFileFromS3(fileUrl: string): Promise<boolean> {
   }
 }
 
-// Frontend utility functions
-export async function uploadImageToAWS(file: File): Promise<string> {
-  // Tên hàm giữ nguyên cho tương thích, nhưng thực hiện upload lên Cloudinary
-  const fileUrl = await uploadFileToS3(file);
+// Hàm tiện ích cho frontend
+export async function uploadImageToCloudinary(file: File): Promise<string> {
+  const fileUrl = await uploadFileToCloudinary(file);
   if (fileUrl.failure || !fileUrl.url) {
     throw new Error(fileUrl.failure);
   }
   return fileUrl.url;
 }
 
-export async function deleteImageFromAWS(imageUrl: string): Promise<void> {
-  const success = await deleteFileFromS3(imageUrl);
+export async function deleteImageFromCloudinary(imageUrl: string): Promise<void> {
+  const success = await deleteFileFromCloudinary(imageUrl);
   if (!success) {
-    throw new Error("Failed to delete image");
+    throw new Error("Xóa ảnh thất bại");
   }
 }
 
-export { uploadFileToS3, deleteFileFromS3 };
+// Xuất các hàm tương thích ngược (nếu cần)
+export {
+  uploadFileToCloudinary as uploadFileToS3,
+  deleteFileFromCloudinary as deleteFileFromS3,
+  uploadImageToCloudinary as uploadImageToAWS,
+  deleteImageFromCloudinary as deleteImageFromAWS,
+};
