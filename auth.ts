@@ -1,18 +1,21 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import Credentials from "next-auth/providers/credentials";
-import { Adapter } from "next-auth/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+
+import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./lib/prisma";
-import { authConfig } from "./auth.config";
+import { Adapter } from "next-auth/adapters";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60, 
     updateAge: 24 * 60 * 60,
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60,
   },
   providers: [
     Google({
@@ -31,16 +34,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         if (!user || !user.password) return null;
-        if (!user.emailVerified) {
-          throw new Error("Email not verified");
-        }
         const passwordsMatch = await bcrypt.compare(
           password as string,
           user.password as string
         );
-        if (passwordsMatch) {
-          return user;
-        }
+        if (passwordsMatch) return user;
         return null;
       },
     }),
@@ -48,17 +46,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user, session, trigger }) {
       if (trigger === "update" && session?.user) {
-        token = {
-          ...token,
-          ...session.user,
-        };
+        token.name = session.user.name;
+        token.email = session.user.email;
+        token.phone = session.user.phone;
+        token.image = session.user.image;
+        token.role = session.user.role;
       }
 
       if (user) {
-        token = {
-          ...token,
-          ...user,
-        };
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+
+        token.image = user.image;
+        token.role = user.role;
       }
 
       return token;
@@ -70,17 +71,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: token.id as string,
           name: token.name as string,
           email: token.email as string,
-          emailVerified: token.emailVerified as Date,
+        
           image: token.image as string,
+          role: token.role as string,
         };
       }
-      return session;   
+      return session;
     },
     async redirect({ baseUrl }) {
       return `${baseUrl}`;
     },
-    ...authConfig,
   },
-
+  
   secret: process.env.AUTH_SECRET,
 });
