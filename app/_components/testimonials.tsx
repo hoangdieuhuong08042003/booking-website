@@ -1,4 +1,6 @@
 import { Star } from "lucide-react";
+import Image from "next/image";
+import { getProxiedUrl } from "@/lib/utils";
 
 const testimonials = [
   {
@@ -58,11 +60,14 @@ export function Testimonials() {
               </p>
 
               <div className="flex items-center gap-4 pt-6 border-t border-border">
-                <img
-                  src={testimonial.image || "/placeholder.svg"}
-                  alt={testimonial.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
+                <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                  <Image
+                    src={getProxiedUrl(testimonial.image) || "/placeholder.svg"}
+                    alt={testimonial.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
                 <div>
                   <p className="font-semibold text-foreground">
                     {testimonial.name}

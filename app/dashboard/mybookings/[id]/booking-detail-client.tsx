@@ -15,6 +15,7 @@ import { useState } from "react";
 import { cancelReservation } from "@/app/_actions/reservation/reservation-actions";
 import { Reservation } from "@prisma/client";
 import { Button } from "@/components/ui/button";
+
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ReviewPrompt from "./review-prompt";
+import { getProxiedUrl } from "@/lib/utils";
 
 const statusTranslations = {
   ACTIVE: "Đang hoạt động",
@@ -150,7 +152,7 @@ export default function BookingDetailClient({
           <div className="md:col-span-1">
             {booking.listing?.thumbnail && (
               <Image
-                src={booking.listing.thumbnail}
+                src={getProxiedUrl(booking.listing.thumbnail)}
                 alt={booking.listing.name}
                 width={300}
                 height={200}

@@ -1,7 +1,9 @@
 "use client";
 
+
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import { getProxiedUrl } from "@/lib/utils";
 
 interface ImageGalleryProps {
   thumbnail?: string | null;
@@ -41,7 +43,7 @@ export default function ImageGallery({
         style={{ paddingBottom: "50%" }}
       >
         <Image
-          src={mainImage}
+          src={getProxiedUrl(mainImage)}
           alt={alt ?? "image"}
           fill
           className="object-cover"
@@ -60,7 +62,7 @@ export default function ImageGallery({
               style={{ aspectRatio: "1 / 1" }}
             >
               <Image
-                src={thumbnail}
+                src={getProxiedUrl(thumbnail)}
                 alt={alt ?? "thumb"}
                 fill
                 className="object-cover"
@@ -85,7 +87,7 @@ export default function ImageGallery({
               style={{ aspectRatio: "1 / 1" }}
             >
               <Image
-                src={src}
+                src={getProxiedUrl(src)}
                 alt={`${alt ?? "img"} ${i + 1}`}
                 fill
                 className="object-cover"

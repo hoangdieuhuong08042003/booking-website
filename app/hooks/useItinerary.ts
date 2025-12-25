@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Itinerary } from "../dashboard/itinerary/types";
 
 interface ItineraryParams {
   province: string;
@@ -9,7 +10,7 @@ interface ItineraryParams {
 }
 
 export function useItinerary() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Itinerary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,8 +29,8 @@ export function useItinerary() {
 
       const json = await res.json();
       setData(json);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setLoading(false);
     }

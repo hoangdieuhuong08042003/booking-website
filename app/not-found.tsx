@@ -7,6 +7,7 @@ import { ArrowLeft, Home } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { getProxiedUrl } from "@/lib/utils";
 
 export default function NotFound() {
   const titleControls = useAnimation();
@@ -119,7 +120,7 @@ export default function NotFound() {
             className="relative w-full max-w-[360px] h-[36vh] md:h-[56vh] flex items-center justify-center"
           >
             <Image
-              src="/niwan2.png"
+              src={getProxiedUrl("/niwan2.png")}
               alt="Niwan"
               fill
               className="object-contain"

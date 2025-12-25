@@ -1,4 +1,5 @@
-import { MapPin, Star } from "lucide-react";
+import Image from "next/image";
+import { getProxiedUrl } from "@/lib/utils";
 
 const featuredHotels = [
   {
@@ -60,15 +61,18 @@ export function FeaturedDestinations() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredHotels.map((hotel) => (
-            <img
-              key={hotel.id}
-              src={hotel.image || "/placeholder.svg"}
-              alt={hotel.name}
-              className="w-full h-80 object-cover rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300"
-            />
+            <div key={hotel.id} className="relative w-full h-80 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden">
+              <Image
+                src={getProxiedUrl(hotel.image) || "/placeholder.svg"}
+                alt={hotel.name}
+                fill
+                className="object-cover"
+              />
+            </div>
           ))}
         </div>
       </div>
     </section>
   );
 }
+

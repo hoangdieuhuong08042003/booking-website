@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import LoginForm from "./LoginForm";
 
@@ -37,7 +37,9 @@ export default function LoginPage() {
         }}
       />
       <div className="relative z-10 flex min-h-svh items-center justify-center p-4">
-        <LoginForm />
+        <Suspense fallback={<div>Loading...</div>}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );

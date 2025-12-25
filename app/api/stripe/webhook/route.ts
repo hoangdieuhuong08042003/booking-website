@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import { headers } from "next/headers";
 import { createReservation } from "@/app/_actions/reservation/reservation-actions";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
   apiVersion: "2025-11-17.clover",
 });
 
@@ -43,7 +43,6 @@ export async function POST(req: Request) {
         startDate,
         endDate,
         listingId,
-        pricePerNight,
         daysDifference,
         useId: userId,
         phone,
@@ -97,7 +96,7 @@ export async function POST(req: Request) {
       { error: "Webhook handler failed" },
       { status: 500 }
     );
-   
+
   }
-   return new NextResponse(null, { status: 200 });
+  return new NextResponse(null, { status: 200 });
 }

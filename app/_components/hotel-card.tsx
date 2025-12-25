@@ -1,10 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+
 import { Star, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Listing } from "@prisma/client";
+import { getProxiedUrl } from "@/lib/utils";
 
 type ListingWithRelations = Listing & {
   province?: { id: number; name: string } | null;
@@ -29,7 +31,7 @@ export function HotelCard({ listing }: ListingCardProps) {
     <div className="border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-card">
       <div className="relative h-48 w-full bg-muted">
         <Image
-          src={imageSrc}
+          src={getProxiedUrl(imageSrc)}
           alt={listing.name}
           fill
           className="object-cover"

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { getListingReviews } from "@/app/_actions/review/review-actions";
+import { getProxiedUrl } from "@/lib/utils";
 
 type Props = { listingId: string };
 
@@ -23,7 +24,7 @@ export default async function ListingReviews({ listingId }: Props) {
           <li key={review.id} className="flex gap-3 border p-3 rounded-lg">
             {review.user?.image ? (
               <Image
-                src={review.user.image}
+                src={getProxiedUrl(review.user.image)}
                 alt={review.user.name ?? "user"}
                 width={32}
                 height={32}

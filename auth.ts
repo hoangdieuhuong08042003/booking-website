@@ -8,6 +8,7 @@ import { prisma } from "./lib/prisma";
 import { authConfig } from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
@@ -74,7 +75,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           image: token.image as string,
         };
       }
-      return session;   
+      return session;
     },
     async redirect({ baseUrl }) {
       return `${baseUrl}`;

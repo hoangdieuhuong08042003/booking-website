@@ -5,6 +5,7 @@ import Image from "next/image";
 import { MapPin, Navigation, Coffee, Camera, Moon } from "lucide-react";
 import type { ComponentType } from "react";
 import { DayPlan, TimeSlot } from "../types";
+import { getProxiedUrl } from "@/lib/utils";
 
 export default function DayCard({
   dayData,
@@ -100,7 +101,7 @@ export default function DayCard({
                       src={
                         imgFallback[key]
                           ? "/placeholder.svg?height=128&width=128"
-                          : location.hình_ảnh
+                          : getProxiedUrl(location.hình_ảnh)
                       }
                       alt={location.tên}
                       fill
