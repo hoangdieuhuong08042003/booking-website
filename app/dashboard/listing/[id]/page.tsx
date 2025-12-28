@@ -1,7 +1,7 @@
 import React from "react";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import ImageGallery from "@/app/_components/image-gallery";
-import { Star, MapPin, Wifi, Utensils, Dumbbell } from "lucide-react";
+import { Star, MapPin, BedDouble, DoorOpen, Tag } from "lucide-react";
 import { getListingById } from "@/app/_actions/listing/listing-actions";
 import Link from "next/link";
 import ListingReviews from "@/app/(site)/listings/[listingId]/_components/listing-reviews";
@@ -37,15 +37,25 @@ export default async function HotelDetailPage({
   const rating = listing.avgRating ?? 0;
   const amenities = listing.amenities?.map((a) => a.amenity.name) ?? [];
 
+  // Thêm hàm tạo màu pastel ngẫu nhiên
+  function getRandomPastelColor(seed: string) {
+    // Simple hash from string
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    // Generate pastel HSL
+    const h = Math.abs(hash) % 360;
+    return `hsl(${h}, 70%, 88%)`;
+  }
+
   return (
-    <main className="min-h-screen bg-background ">
+    <main className="min-h-screen bg-background">
       <DashboardHeader />
-      {/* remove container limit so page can use near-full width */}
-      <div className="px-4 py-8">
-        {/* WRAPPER: nearly full viewport width */}
-        <div className="listing-wrapper max-w-[95vw] mx-auto w-full flex flex-col gap-10 bg-white  lg:p-12">
-          {/* Main gallery (full width) */}
-          <div className="w-full">
+      <div className="px-2 py-8 bg-gradient-to-b from-gray-50 to-background min-h-screen">
+        <div className="listing-wrapper max-w-[1200px] mx-auto w-full flex flex-col gap-10">
+          {/* Main gallery */}
+          <div className="w-full flex justify-center rounded-2xl overflow-hidden shadow-lg bg-white">
             <ImageGallery
               thumbnail={imageSrc}
               images={listing.imageUrls ?? []}
@@ -53,121 +63,126 @@ export default async function HotelDetailPage({
             />
           </div>
 
-          {/* Info block: trên mobile xếp dọc, trên lg xếp ngang (thông tin bên trái, booking bên phải) */}
-          <div className="w-full">
-            <div className="mb-4" />
-
-            <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-              {/* Left: chính chứa title, rating, desc, amenities, other info */}
-              <div className="flex-1">
-                <h1 className="text-6xl leading-tight font-bold text-foreground mb-6">
+          {/* Info block */}
+          <div className="w-full flex flex-col lg:flex-row gap-8">
+            {/* Left: Title, rating, desc, amenities, other info */}
+            <div className="flex-1 flex flex-col gap-8">
+              <div className="bg-white rounded-2xl shadow-md p-8">
+                <h1 className="text-4xl lg:text-5xl leading-tight font-bold text-foreground mb-4">
                   {listing.name}
                 </h1>
-
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div className="flex items-center gap-1">
-                    <Star className="w-5 h-5 fill-accent text-accent" />
-                    <span className="text-xl font-semibold">
+                    <Star className="w-5 h-5 fill-red-500 text-red-500" />
+                    <span className="text-lg font-semibold">
                       {rating.toFixed(1)}
                     </span>
                   </div>
-                  <span className="text-muted-foreground">
+                  <span className="text-muted-foreground text-base">
                     ({listing.avgRating ?? 0} đánh giá)
                   </span>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="w-4 h-4" />
-                    {location}
+                    <span className="font-medium">{location}</span>
                   </div>
                 </div>
-
-                <p className="text-lg text-muted-foreground mb-8">
-                  {listing.desc}
-                </p>
-
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold mb-4">Tiện nghi</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div
+                  className="text-base text-muted-foreground mb-6"
+                  dangerouslySetInnerHTML={{
+                    __html: listing.desc || "",
+                  }}
+                />
+                <div>
+                  <h2 className="text-xl font-bold mb-3">Tiện nghi</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {amenities.length ? (
                       amenities.map((amenity, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center gap-2 p-3 bg-secondary rounded"
+                          className="flex items-center gap-2 p-3 rounded-lg text-gray-700 text-sm font-semibold shadow-sm"
+                          style={{ background: getRandomPastelColor(amenity) }}
                         >
-                          {amenity.includes("WiFi") && (
-                            <Wifi className="w-4 h-4" />
-                          )}
-                          {(amenity.toLowerCase().includes("nhà hàng") ||
-                            amenity.toLowerCase().includes("nhahang")) && (
-                            <Utensils className="w-4 h-4" />
-                          )}
-                          {amenity.toLowerCase().includes("gym") && (
-                            <Dumbbell className="w-4 h-4" />
-                          )}
-                          <span className="text-sm">{amenity}</span>
+                          <span className="text-xs">{amenity}</span>
                         </div>
                       ))
                     ) : (
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Không có thông tin tiện nghi
                       </div>
                     )}
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <h2 className="text-2xl font-bold mb-4">Thông tin khác</h2>
-                  <div className="space-y-2 text-muted-foreground">
-                    <div>
-                      Số phòng còn trống: {listing.roomsAvailable ?? "—"}
-                    </div>
-                    <div>
-                      Giường:{" "}
+              {/* Thông tin khác */}
+              <div className="bg-white rounded-2xl shadow-md p-8">
+                <h2 className="text-xl font-bold mb-4">Thông tin khác</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4">
+                    <DoorOpen className="w-5 h-5 text-blue-500" />
+                    <span className="text-sm text-muted-foreground">
+                      Số phòng còn trống:
+                    </span>
+                    <span className="font-semibold text-base text-foreground">
+                      {listing.roomsAvailable ?? "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4">
+                    <BedDouble className="w-5 h-5 text-green-500" />
+                    <span className="text-sm text-muted-foreground">
+                      Giường:
+                    </span>
+                    <span className="font-semibold text-base text-foreground">
                       {typeof listing.beds === "number" ? listing.beds : "—"}
-                    </div>
-                    <div>Loại: {listing.type}</div>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4">
+                    <Tag className="w-5 h-5 text-purple-500" />
+                    <span className="text-sm text-muted-foreground">Loại:</span>
+                    <span className="font-semibold text-base text-foreground">
+                      {listing.type}
+                    </span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Right: booking card (bên cạnh thông tin trên lg, dưới trên mobile) */}
-              <div className="w-full lg:w-96 flex-shrink-0">
-                <div className="bg-card border border-border rounded-lg p-8 lg:sticky lg:top-24">
-                  <h3 className="text-xl font-bold mb-4">Chi tiết đặt phòng</h3>
-
-                  <div className="space-y-4 mb-6">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Giá mỗi đêm
-                      </p>
-                      <p className="text-4xl font-extrabold text-accent">
-                        {listing.pricePerNight.toLocaleString("vi-VN")} ₫
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Số giường
-                      </p>
-                      <p className="font-semibold">{listing.beds ?? "—"}</p>
-                    </div>
+            {/* Right: booking card */}
+            <div className="w-full lg:w-96 flex-shrink-0">
+              <div className="bg-white border border-border rounded-2xl shadow-lg p-8 sticky top-24">
+                <h3 className="text-lg font-bold mb-4">Chi tiết đặt phòng</h3>
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Giá mỗi đêm
+                    </p>
+                    <p className="text-3xl font-extrabold text-red-600">
+                      {listing.pricePerNight.toLocaleString("vi-VN")} ₫
+                    </p>
                   </div>
-
-                  <Link
-                    href={`/dashboard/booking/${
-                      listing.id
-                    }?price=${encodeURIComponent(
-                      String(listing.pricePerNight)
-                    )}&name=${encodeURIComponent(String(listing.name))}`}
-                  >
-                    <Button className="w-full py-4 lg:py-6 text-lg lg:text-xl">
-                      Tiếp tục đặt phòng
-                    </Button>
-                  </Link>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Số giường
+                    </p>
+                    <p className="font-semibold">{listing.beds ?? "—"}</p>
+                  </div>
                 </div>
+                <Link
+                  href={`/dashboard/booking/${
+                    listing.id
+                  }?price=${encodeURIComponent(
+                    String(listing.pricePerNight)
+                  )}&name=${encodeURIComponent(String(listing.name))}`}
+                >
+                  <Button className="w-full py-3 lg:py-4 text-base lg:text-lg">
+                    Tiếp tục đặt phòng
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
         </div>
-        <div className="max-w-[95vw] mx-auto w-full bg-white px-4 py-6 mt-6">
+        <div className="max-w-[1200px] mx-auto w-full bg-white rounded-2xl shadow-md px-4 py-6 mt-8">
           <ListingReviews listingId={listing.id} />
         </div>
       </div>

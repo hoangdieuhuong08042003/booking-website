@@ -50,7 +50,7 @@ export function HotelCard({ listing }: ListingCardProps) {
 
         <div className="flex items-center gap-2 mb-4">
           <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-accent text-accent" />
+            <Star className="w-4 h-4 fill-red-500 text-red-500" />
             <span className="font-semibold text-foreground">
               {(listing.avgRating ?? 0).toFixed(1)}
             </span>
@@ -88,7 +88,7 @@ export function HotelCard({ listing }: ListingCardProps) {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Giá / đêm</p>
-            <p className="text-xl font-bold text-accent">
+            <p className="text-xl font-bold text-red-500">
               {listing.pricePerNight.toLocaleString("vi-VN")} ₫
             </p>
           </div>

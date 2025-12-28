@@ -204,23 +204,25 @@ export function FilterSidebar({
   };
 
   return (
-    <aside className="w-full md:w-72 bg-white rounded-lg shadow-lg p-6 mb-8 md:mb-0 md:mr-8">
-      <div className="flex items-center gap-2 mb-4">
-        <Filter className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-semibold">Bộ lọc</h2>
+    <aside className="w-full md:w-80 bg-white rounded-sm shadow-xl p-7 mb-8 md:mb-0 md:mr-8 border border-gray-100">
+      <div className="flex items-center gap-3 mb-6 justify-center">
+        <Filter className="w-6 h-6 text-primary" />
+        <h2 className="text-xl font-bold tracking-tight text-primary text-center">
+          Bộ lọc tìm kiếm
+        </h2>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-7">
         {/* Location */}
-        <div>
-          <label className="text-sm font-semibold flex items-center gap-2 mb-1">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold flex items-center gap-2 mb-1 text-gray-700">
             <MapPin className="w-4 h-4 text-primary" />
             Tỉnh/Thành phố
           </label>
           <select
             value={filters.location}
             onChange={(e) => updateFilter("location", e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/30 transition"
           >
             <option value="">Chọn tỉnh/thành phố</option>
             {loadingProvinces ? (
@@ -234,16 +236,20 @@ export function FilterSidebar({
             )}
           </select>
         </div>
-        {/* Ward */}
-        <div>
-          <label className="text-sm font-semibold flex items-center gap-2 mb-1">
+
+        <div className="border-t pt-5 flex flex-col gap-2">
+          <label className="text-sm font-semibold flex items-center gap-2 mb-1 text-gray-700">
             <MapPin className="w-4 h-4 text-primary" />
             Quận/Huyện/Xã
           </label>
           <select
             value={filters.ward}
             onChange={(e) => updateFilter("ward", e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/30 transition ${
+              !filters.location
+                ? "opacity-50 cursor-not-allowed bg-gray-100"
+                : ""
+            }`}
             disabled={!filters.location}
           >
             <option value="">Chọn quận/huyện/xã</option>
@@ -259,81 +265,85 @@ export function FilterSidebar({
           </select>
         </div>
 
-        {/* Check-in */}
-        <div>
-          <label className="text-sm font-semibold flex items-center gap-2 mb-1">
-            <Calendar className="w-4 h-4 text-primary" />
-            Nhận phòng
-          </label>
-          <Input
-            type="date"
-            value={filters.checkIn ?? ""}
-            onChange={(e) => updateFilter("checkIn", e.target.value)}
-          />
+        <div className="border-t pt-5 grid grid-cols-2 gap-4">
+          {/* Check-in */}
+          <div>
+            <label className="text-sm font-semibold flex items-center gap-2 mb-1 text-gray-700">
+              <Calendar className="w-4 h-4 text-primary" />
+              Nhận phòng
+            </label>
+            <Input
+              type="date"
+              value={filters.checkIn ?? ""}
+              onChange={(e) => updateFilter("checkIn", e.target.value)}
+              className="rounded-lg"
+            />
+          </div>
+          {/* Check-out */}
+          <div>
+            <label className="text-sm font-semibold flex items-center gap-2 mb-1 text-gray-700">
+              <Calendar className="w-4 h-4 text-primary" />
+              Trả phòng
+            </label>
+            <Input
+              type="date"
+              value={filters.checkOut ?? ""}
+              onChange={(e) => updateFilter("checkOut", e.target.value)}
+              className="rounded-lg"
+            />
+          </div>
         </div>
 
-        {/* Check-out */}
-        <div>
-          <label className="text-sm font-semibold flex items-center gap-2 mb-1">
-            <Calendar className="w-4 h-4 text-primary" />
-            Trả phòng
-          </label>
-          <Input
-            type="date"
-            value={filters.checkOut ?? ""}
-            onChange={(e) => updateFilter("checkOut", e.target.value)}
-          />
-        </div>
-
-        {/* Guests */}
-        <div>
-          <label className="text-sm font-semibold flex items-center gap-2 mb-1">
-            <Users className="w-4 h-4 text-primary" />
-            Khách
-          </label>
-          <select
-            value={filters.guests}
-            onChange={(e) => updateFilter("guests", parseInt(e.target.value))}
-            className="w-full px-3 py-2 border rounded-md"
-          >
-            <option value={1}>1 khách</option>
-            <option value={2}>2 khách</option>
-            <option value={3}>3 khách</option>
-            <option value={4}>4 khách</option>
-            <option value={5}>5+ khách</option>
-          </select>
-        </div>
-
-        {/* Room Type */}
-        <div>
-          <label className="text-sm font-semibold flex items-center gap-2 mb-1">
-            <BedDouble className="w-4 h-4 text-primary" />
-            Loại phòng
-          </label>
-          <select
-            value={filters.roomTypeId}
-            onChange={(e) => updateFilter("roomTypeId", e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
-          >
-            {loadingRoomTypes ? (
-              <option disabled>Đang tải...</option>
-            ) : (
-              roomTypes.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))
-            )}
-          </select>
+        <div className="border-t pt-5 grid grid-cols-2 gap-4">
+          {/* Guests */}
+          <div>
+            <label className="text-sm font-semibold flex items-center gap-2 mb-1 text-gray-700">
+              <Users className="w-4 h-4 text-primary" />
+              Khách
+            </label>
+            <select
+              value={filters.guests}
+              onChange={(e) => updateFilter("guests", parseInt(e.target.value))}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/30 transition"
+            >
+              <option value={1}>1 khách</option>
+              <option value={2}>2 khách</option>
+              <option value={3}>3 khách</option>
+              <option value={4}>4 khách</option>
+              <option value={5}>5+ khách</option>
+            </select>
+          </div>
+          {/* Room Type */}
+          <div>
+            <label className="text-sm font-semibold flex items-center gap-2 mb-1 text-gray-700">
+              <BedDouble className="w-4 h-4 text-primary" />
+              Loại phòng
+            </label>
+            <select
+              value={filters.roomTypeId}
+              onChange={(e) => updateFilter("roomTypeId", e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/30 transition"
+            >
+              {loadingRoomTypes ? (
+                <option disabled>Đang tải...</option>
+              ) : (
+                roomTypes.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
         </div>
 
         {/* Price */}
-        <div>
-          <label className="text-sm font-semibold flex items-center gap-2 mb-1">
+        <div className="border-t pt-5">
+          <label className="text-sm font-semibold flex items-center gap-2 mb-2 text-gray-700">
             <DollarSign className="w-4 h-4 text-primary" />
             Giá (VND/đêm)
           </label>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <Slider
               min={priceRange.min}
               max={priceRange.max}
@@ -342,8 +352,9 @@ export function FilterSidebar({
               onValueChange={(values) =>
                 handlePriceSliderChange(values as [number, number])
               }
+              className="w-full"
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="flex justify-between text-xs text-muted-foreground font-medium">
               <span>Từ {priceSlider[0].toLocaleString()}₫</span>
               <span>Đến {priceSlider[1].toLocaleString()}₫</span>
             </div>
@@ -351,23 +362,27 @@ export function FilterSidebar({
         </div>
 
         {/* Amenities */}
-        <div>
-          <label className="text-sm font-semibold flex items-center gap-2 mb-1">
+        <div className="border-t pt-5">
+          <label className="text-sm font-semibold flex items-center gap-2 mb-2 text-gray-700">
             <Wifi className="w-4 h-4 text-primary" />
             Tiện nghi
           </label>
-          <div className="flex flex-col gap-1">
+          <div className="grid grid-cols-2 gap-2">
             {loadingAmenities ? (
-              <span>Đang tải...</span>
+              <span className="col-span-2">Đang tải...</span>
             ) : (
               amenities.map((a) => (
-                <label key={a.id} className="flex items-center gap-2 text-sm">
+                <label
+                  key={a.id}
+                  className="flex items-center gap-2 text-sm cursor-pointer"
+                >
                   <input
                     type="checkbox"
                     checked={
                       filters.selectedAmenities?.includes(a.name) || false
                     }
                     onChange={() => toggleAmenity(a.name)}
+                    className="accent-primary"
                   />
                   {a.name}
                 </label>
@@ -377,10 +392,10 @@ export function FilterSidebar({
         </div>
 
         {/* Search and Reset Buttons */}
-        <div className="flex gap-2">
+        <div className="border-t pt-6 flex gap-3">
           <Button
             onClick={handleSearch}
-            className="flex-1 flex items-center justify-center gap-2"
+            className="flex-1 flex items-center justify-center gap-2 text-base font-semibold h-11 rounded-lg shadow-md bg-primary hover:bg-primary/90 transition"
           >
             <Search className="w-4 h-4" />
             Tìm kiếm
@@ -388,7 +403,7 @@ export function FilterSidebar({
           <Button
             onClick={handleReset}
             variant="outline"
-            className="flex-1 flex items-center justify-center gap-2"
+            className="flex-1 flex items-center justify-center gap-2 text-base font-semibold h-11 rounded-lg border-gray-300"
           >
             <RotateCcw className="w-4 h-4" />
             Xóa

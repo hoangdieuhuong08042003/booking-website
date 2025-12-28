@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-
-const geist = Geist({ subsets: ["latin"] });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "TravelHub - Khám Phá Thế Giới",
@@ -37,8 +34,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body className={`${geist.className} ${geistMono.variable} font-sans antialiased`}>
-        <Providers>{children}</Providers>
+      <body className={`font-sans antialiased`}>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

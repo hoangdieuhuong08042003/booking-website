@@ -52,7 +52,7 @@ export const UserButton = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="mr-6">
         <DropdownMenuLabel>
-          <p>アカウント</p>
+          <p>Tài khoản</p>
         </DropdownMenuLabel>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
           <UserItem
@@ -63,15 +63,16 @@ export const UserButton = () => {
           />
         </DropdownMenuItem>
 
-        <Link href="/setting">
+        {/* Sửa đường dẫn và nhãn */}
+        <Link href="/admin">
           <DropdownMenuItem>
             <Settings />
-            設定
+            Quản lý
           </DropdownMenuItem>
         </Link>
         <DropdownMenuItem onClick={logOut}>
           <LogOut />
-          サインアウト
+          Đăng xuất
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

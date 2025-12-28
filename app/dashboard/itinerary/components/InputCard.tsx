@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Sparkles, Clock } from "lucide-react";
+import { MapPin, Calendar, Sparkles, Clock, Map } from "lucide-react";
 
 export default function InputCard({
   province,
@@ -11,6 +11,8 @@ export default function InputCard({
   keywords,
   loading,
   fetchItinerary,
+  fetchRecommendations,
+  recommendLoading,
 }: {
   province: string;
   setProvince: (v: string) => void;
@@ -23,6 +25,12 @@ export default function InputCard({
     days: number;
     keywords: string[];
   }) => void | Promise<void>;
+  fetchRecommendations: (params: {
+    province: string;
+    keywords: string[];
+    days?: number;
+  }) => void | Promise<void>;
+  recommendLoading: boolean;
 }) {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 shadow-lg sticky top-6">
@@ -105,7 +113,7 @@ export default function InputCard({
           }
           whileHover={{ scale: loading ? 1 : 1.02 }}
           whileTap={{ scale: loading ? 1 : 0.98 }}
-          className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-3"
         >
           {loading ? (
             <>
@@ -125,6 +133,41 @@ export default function InputCard({
             <>
               <Sparkles className="w-5 h-5" />
               Tạo lịch trình
+            </>
+          )}
+        </motion.button>
+        {/* Button chỉ trả về các địa điểm gợi ý */}
+        <motion.button
+          disabled={recommendLoading}
+          onClick={() =>
+            fetchRecommendations({
+              province,
+              keywords,
+              days,
+            })
+          }
+          whileHover={{ scale: recommendLoading ? 1 : 1.02 }}
+          whileTap={{ scale: recommendLoading ? 1 : 0.98 }}
+          className="w-full px-6 py-4 bg-accent text-accent-foreground rounded-xl font-semibold shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {recommendLoading ? (
+            <>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{
+                  duration: 1,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "linear",
+                }}
+              >
+                <Clock className="w-5 h-5" />
+              </motion.div>
+              Đang lấy gợi ý...
+            </>
+          ) : (
+            <>
+              <Map className="w-5 h-5" />
+              Chỉ xem gợi ý địa điểm
             </>
           )}
         </motion.button>

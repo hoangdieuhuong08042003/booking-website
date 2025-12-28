@@ -196,8 +196,9 @@ async function getListingById(listingId: string) {
     include: {
       province: true,
       ward: true,
-    
+      roomType: true,
       amenities: { include: { amenity: true } },
+      images: { select: { id: true, imageUrl: true, order: true } },
     },
   });
   return listing;
@@ -313,6 +314,176 @@ async function getListingPriceRange() {
   };
 }
 
+/**
+ * Lấy tất cả listings (dùng cho trang admin)
+ */
+async function listListings() {
+  const listings = await prisma.listing.findMany({
+    orderBy: { id: "desc" }, // Sử dụng id thay cho createdAt
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      pricePerNight: true,
+      beds: true,
+      roomsAvailable: true,
+      // ...add more fields if needed
+    },
+  });
+  return listings;
+}
+
+/**
+ * Cập nhật listing (admin)
+ */
+async function updateListing(
+  id: string,
+  data: {
+    name?: string;
+    type?: string;
+    desc?: string;
+    pricePerNight?: number;
+    beds?: number;
+    imageUrls?: string[];
+    thumbnail?: string;
+    provinceId?: string | null;
+    wardId?: string | null;
+    amenityIds?: string[];
+    roomsAvailable?: number;
+    roomTypeId?: string | null;
+  }
+) {
+  const {
+    amenityIds,
+    provinceId,
+    wardId,
+    roomTypeId,
+    ...rest
+  } = data;
+
+  const updateData: Prisma.ListingUpdateInput = {
+    ...rest,
+  };
+
+  /* ================= AMENITIES ================= */
+  if (amenityIds) {
+    updateData.amenities = {
+      deleteMany: {},
+      create: amenityIds.map((id) => ({
+        amenity: { connect: { id } },
+      })),
+    };
+  }
+
+  /* ================= PROVINCE ================= */
+  if (provinceId !== undefined) {
+    updateData.province = provinceId
+      ? { connect: { id: provinceId } }
+      : { disconnect: true };
+  }
+
+  /* ================= WARD ================= */
+  if (wardId !== undefined) {
+    updateData.ward = wardId
+      ? { connect: { id: wardId } }
+      : { disconnect: true };
+  }
+
+  /* ================= ROOM TYPE ================= */
+  if (roomTypeId !== undefined) {
+    updateData.roomType = roomTypeId
+      ? { connect: { id: roomTypeId } }
+      : { disconnect: true };
+  }
+
+  /* ================= UPDATE ================= */
+  const updated = await prisma.listing.update({
+    where: { id },
+    data: updateData,
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      desc: true,
+      pricePerNight: true,
+      beds: true,
+      imageUrls: true,
+      thumbnail: true,
+      avgRating: true,
+      roomsAvailable: true,
+
+      // foreign keys (read-only)
+      provinceId: true,
+      wardId: true,
+
+      amenities: {
+        select: {
+          amenity: { select: { id: true, name: true } },
+        },
+      },
+      province: { select: { id: true, name: true } },
+      ward: { select: { id: true, name: true } },
+      roomType: { select: { id: true, name: true } },
+      images: {
+        select: { id: true, imageUrl: true, order: true },
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+
+  return updated;
+}
+
+
+/**
+ * Xóa listing (dùng cho trang admin)
+ * Khi xóa listing thì xóa cả ảnh của listing ở bảng ListingImage
+ */
+async function deleteListing(id: string) {
+  // Xóa tất cả ảnh liên quan trong bảng ListingImage trước
+  await prisma.listingImage.deleteMany({
+    where: { listingId: id },
+  });
+
+  // Sau đó xóa listing
+  const deleted = await prisma.listing.delete({
+    where: { id },
+    select: { id: true },
+  });
+  return deleted;
+}
+
+// CRUD for ListingImage
+async function createListingImage(data: { listingId: string; imageUrl: string }) {
+  const image = await prisma.listingImage.create({
+    data: {
+      listingId: data.listingId,
+      imageUrl: data.imageUrl,
+    },
+    select: {
+      id: true,
+      imageUrl: true,
+    },
+  });
+  return image;
+}
+
+async function deleteListingImage(imageId: string) {
+  return prisma.listingImage.delete({
+    where: { id: imageId },
+    select: { id: true },
+  });
+}
+
+async function getImagesByListingId(listingId: string) {
+  const images = await prisma.listingImage.findMany({
+    where: { listingId },
+    orderBy: { order: "asc" },
+    select: { id: true, imageUrl: true },
+  });
+  return images;
+}
+
 // (REMOVE) createReservation implementation moved to reservation-actions.ts
 
 export {
@@ -322,4 +493,11 @@ export {
   getListingById,
   getListingByFilter,
   getListingPriceRange,
+  listListings,
+  updateListing,
+  deleteListing,
+  // ListingImage CRUD
+  createListingImage,
+  deleteListingImage,
+  getImagesByListingId,
 };

@@ -88,6 +88,39 @@ async function setListingImages(
   return imageUrls ?? [];
 }
 
+async function getImagesByListingId(listingId: string): Promise<string[]> {
+  return getImages(listingId);
+}
+
+/**
+ * Tạo một bản ghi ảnh mới cho listing (ListingImage)
+ */
+async function createListingImage({
+  listingId,
+  imageUrl,
+}: {
+  listingId: string;
+  imageUrl: string;
+}): Promise<{ id: string; imageUrl: string } | null> {
+  try {
+    // Đổi tên property dưới đây nếu cần
+    const image = await prisma.listingImage.create({
+      data: {
+        listingId,
+        imageUrl,
+      },
+      select: {
+        id: true,
+        imageUrl: true,
+      },
+    });
+    return image;
+  } catch (err) {
+    console.error("createListingImage error:", err);
+    return null;
+  }
+}
+
 export {
   addImageToListing,
   getImages,
@@ -95,4 +128,6 @@ export {
   removeImageFromListing,
   clearListingImages,
   setListingImages,
+  getImagesByListingId,
+  createListingImage,
 };
