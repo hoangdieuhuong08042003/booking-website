@@ -92,32 +92,34 @@ export default function DayCard({
               </div>
 
               {/* Location Card */}
-              <div className="flex gap-4 bg-white rounded-xl p-4 transition-all duration-300 border border-border/50">
-                {/* Location Image */}
-                {location.hình_ảnh && (
-                  <div className="flex-shrink-0 w-32 h-32 rounded-lg overflow-hidden bg-muted relative">
-                    <Image
-                      src={
-                        imgFallback[key]
-                          ? "/placeholder.svg?height=128&width=128"
-                          : location.hình_ảnh
-                      }
-                      alt={location.tên}
-                      fill
-                      sizes="128px"
-                      className="object-cover group-hover:scale-110 transition-transform duration-300"
-                      onError={() =>
-                        setImgFallback((prev) => ({
-                          ...prev,
-                          [key]: true,
-                        }))
-                      }
-                    />
-                  </div>
-                )}
+              <div className="flex bg-white rounded-xl transition-all duration-300 border border-border/50 overflow-hidden">
+                {/* Location Image - Left Side */}
+                <div className="relative flex-shrink-0 w-[420px] h-[320px] bg-muted flex items-center justify-center">
+                  {location.hình_ảnh && (
+                    <div className="w-full h-full relative">
+                      <Image
+                        src={
+                          imgFallback[key]
+                            ? "/placeholder.svg?height=512&width=512"
+                            : location.hình_ảnh
+                        }
+                        alt={location.tên}
+                        fill
+                        sizes="420px"
+                        className="object-cover rounded-none transition-transform duration-300"
+                        onError={() =>
+                          setImgFallback((prev) => ({
+                            ...prev,
+                            [key]: true,
+                          }))
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
 
-                {/* Location Details */}
-                <div className="flex-1 min-w-0 space-y-2">
+                {/* Location Details - Right Side */}
+                <div className="flex flex-col justify-center min-w-0 space-y-2 px-8 py-6 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <h4 className="font-semibold text-foreground text-lg">
                       {location.tên}

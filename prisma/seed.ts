@@ -1001,6 +1001,76 @@ async function seedReviews() {
 // -----------------------------
 // MAIN
 // -----------------------------
+// ========================
+// Seed Blog Posts
+// ========================
+async function seedBlogs() {
+  console.log("📝 Seeding blog posts...");
+  const blogData = [
+    {
+      title: "Cẩm nang du lịch Vịnh Hạ Long",
+      excerpt: "Kinh nghiệm du thuyền, tham quan đảo và các điểm nổi bật tại Vịnh Hạ Long.",
+      content: "Khám phá Vịnh Hạ Long với lịch trình chi tiết, lựa chọn du thuyền phù hợp và các điểm check-in không thể bỏ lỡ.",
+      imageUrl: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg",
+      author: "Nguyễn Văn A",
+      publishedAt: new Date("2024-06-01"),
+    },
+    {
+      title: "Ẩm thực Hội An: Món ngon không thể bỏ qua",
+      excerpt: "Những món ăn đặc sản và địa chỉ quán ngon tại Hội An.",
+      content: "Hội An nổi tiếng với cao lầu, mì Quảng, bánh mì Phượng và nhiều món ăn hấp dẫn khác.",
+      imageUrl: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg",
+      author: "Trần Thị B",
+      publishedAt: new Date("2024-05-20"),
+    },
+    {
+      title: "Chinh phục Fansipan: Hành trình trên nóc nhà Đông Dương",
+      excerpt: "Kinh nghiệm leo núi Fansipan an toàn và thú vị.",
+      content: "Chuẩn bị hành trang, sức khỏe và lịch trình để chinh phục đỉnh Fansipan thành công.",
+      imageUrl: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg",
+      author: "Lê Văn C",
+      publishedAt: new Date("2024-05-10"),
+    },
+    {
+      title: "Check-in Đà Nẵng: Những điểm sống ảo nổi bật",
+      excerpt: "Tổng hợp các địa điểm check-in đẹp tại Đà Nẵng cho tín đồ du lịch.",
+      content: "Cầu Vàng, biển Mỹ Khê, bán đảo Sơn Trà và nhiều điểm đến hấp dẫn khác.",
+      imageUrl: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg",
+      author: "Phạm Thị D",
+      publishedAt: new Date("2024-04-28"),
+    },
+    {
+      title: "Ninh Bình: Khám phá Tràng An và Tam Cốc",
+      excerpt: "Gợi ý lịch trình, phương tiện di chuyển và trải nghiệm tại Ninh Bình.",
+      content: "Tham quan Tràng An, Tam Cốc, hang Múa và thưởng thức đặc sản dê núi Ninh Bình.",
+      imageUrl: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg",
+      author: "Vũ Minh E",
+      publishedAt: new Date("2024-04-15"),
+    },
+    {
+      title: "Phú Quốc: Du lịch tự túc từ A đến Z",
+      excerpt: "Kinh nghiệm di chuyển, lưu trú, ăn uống và vui chơi tại đảo ngọc Phú Quốc.",
+      content: "Tất tần tật về các điểm tham quan, resort, nhà hàng và hoạt động giải trí ở Phú Quốc.",
+      imageUrl: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg",
+      author: "Ngô Thị F",
+      publishedAt: new Date("2024-03-30"),
+    },
+  ];
+
+  for (const blog of blogData) {
+    // Find by title (assuming title is unique)
+    const existing = await prisma.blog.findUnique({ where: { title: blog.title } });
+    if (existing) {
+      await prisma.blog.update({
+        where: { id: existing.id },
+        data: blog,
+      });
+    } else {
+      await prisma.blog.create({ data: blog });
+    }
+  }
+  console.log("✅ Seeded 6 blog posts!");
+}
 async function main() {
   console.log("🌱 Seeding database...");
 
@@ -1010,6 +1080,8 @@ async function main() {
     const roomTypes = await seedRoomTypes();
     await seedListings(amenities, roomTypes);
     await seedReviews(); // <-- Thêm dòng này để seed review
+
+    await seedBlogs();
 
     console.log("✅ Seed completed!");
   } catch (error) {

@@ -13,7 +13,7 @@ import { DataTable } from "./data-table";
 
 import { Button } from "@/components/ui/button";
 import { deleteListing, getListingByFilter } from "@/app/_actions/listing";
-import { Amenity, Listing, RoomType } from "@prisma/client";
+import { Listing } from "@prisma/client";
 import { ActionButtons } from "../../_component/action-buttons";
 import ConfirmDeleteDialog from "../../_component/confirm-delete-dialog";
 
@@ -42,8 +42,8 @@ const ColumnNames: Record<string, string> = {
 
 export function ListingDataTable({ onAddClick }: { onAddClick: () => void }) {
   const queryClient = useQueryClient();
-  const [selectedAmenity, setSelectedAmenity] = useState<string | null>(null);
-  const [selectedRoomType, setSelectedRoomType] = useState<string | null>(null);
+  const [selectedAmenity] = useState<string | null>(null);
+  const [selectedRoomType] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(
     null
@@ -70,27 +70,6 @@ export function ListingDataTable({ onAddClick }: { onAddClick: () => void }) {
         selectedAmenities: selectedAmenity ? [selectedAmenity] : undefined,
         roomTypeId: selectedRoomType || undefined,
       }),
-    refetchOnWindowFocus: false,
-  });
-
-  // Fetch amenities query
-  const { data: amenities = [] } = useQuery({
-    queryKey: [QUERY_KEYS.amenities],
-    queryFn: async () => {
-      // Implement getAmenity if not available
-      const { getAmenity } = await import("@/app/_actions/listing");
-      return getAmenity();
-    },
-    refetchOnWindowFocus: false,
-  });
-
-  // Fetch room types query
-  const { data: roomTypes = [] } = useQuery({
-    queryKey: [QUERY_KEYS.roomTypes],
-    queryFn: async () => {
-      // Implement getRoomTypes if not available
-      return [];
-    },
     refetchOnWindowFocus: false,
   });
 
@@ -175,50 +154,17 @@ export function ListingDataTable({ onAddClick }: { onAddClick: () => void }) {
     },
   ];
 
-  const filterOptions = [
-    {
-      id: "amenity",
-      label: "Tiện ích",
-      options: amenities.map((amenity: Amenity) => ({
-        label: amenity.name,
-        value: amenity.id,
-      })),
-    },
-    {
-      id: "roomType",
-      label: "Loại phòng",
-      options: roomTypes.map((roomType: RoomType) => ({
-        label: roomType.name,
-        value: roomType.id,
-      })),
-    },
-  ];
-
-  const handleFilterChange = (columnId: string, value: string) => {
-    if (columnId === "amenity") {
-      setSelectedAmenity((prev) => (prev === value ? null : value));
-      setPageIndex(0);
-    }
-    if (columnId === "roomType") {
-      setSelectedRoomType((prev) => (prev === value ? null : value));
-      setPageIndex(0);
-    }
-  };
-
   return (
     <>
       <DataTable
         columns={columns}
         data={listingsData?.listings || []}
-        filterOptions={filterOptions}
         totalPlans={listingsData?.total || 0}
         pageIndex={pageIndex}
         pageSize={pageSize}
         onPageChange={setPageIndex}
         searchTerm={searchQuery}
         onSearchChange={setSearchQuery}
-        filterState={{ selectedAmenity, selectedRoomType }}
-        onFilterChange={handleFilterChange}
         defaultColumnVisibility={defaultColumnVisibility}
         columnNames={ColumnNames}
         addButtonText={

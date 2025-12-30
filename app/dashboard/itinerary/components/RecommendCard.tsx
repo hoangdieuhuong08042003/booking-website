@@ -5,12 +5,12 @@ import { MapPin } from "lucide-react";
 
 export interface RecommendPlace {
   tên: string;
-  tỉnh: string;
+  tỉnh?: string;
   mô_tả: string;
   đánh_giá: number;
   hình_ảnh: string;
   hoạt_động: "Trong nhà" | "Ngoài trời";
-  độ_phù_hợp_từ_khóa: number;
+  khung_giờ_gợi_ý?: string;
 }
 
 export default function RecommendCard({
@@ -24,7 +24,7 @@ export default function RecommendCard({
   setImgFallback: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   weatherSummary?: string;
 }) {
-  const key = `${place.tên}-${place.tỉnh}`;
+  const key = `${place.tên}-${place.tỉnh ?? ""}`;
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-lg">
       {/* Header */}
@@ -88,9 +88,11 @@ export default function RecommendCard({
                 {place.hoạt_động}
               </span>
             )}
-            <span className="text-xs text-accent-foreground ml-auto">
-              Độ phù hợp: {place.độ_phù_hợp_từ_khóa}%
-            </span>
+            {place.khung_giờ_gợi_ý && (
+              <span className="px-2 py-1 bg-accent rounded text-xs ml-auto">
+                Gợi ý: {place.khung_giờ_gợi_ý}
+              </span>
+            )}
           </div>
           {place.mô_tả && (
             <p className="text-muted-foreground text-sm leading-relaxed">

@@ -8,15 +8,17 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    domains: [
-      "res.cloudinary.com", // ✅ Cloudinary
-      "plus.unsplash.com",
-      "images.unsplash.com",
-      "source.unsplash.com",
-      "lh3.googleusercontent.com",
-      "images.pexels.com",
-    ],
-  },
+  domains: [
+    "res.cloudinary.com", 
+    "plus.unsplash.com",
+    "images.unsplash.com",
+    "source.unsplash.com",
+    "lh3.googleusercontent.com",
+    "images.pexels.com",
+
+    "i.pinimg.com",  
+  ],
+},
 };
 
 export default nextConfig;

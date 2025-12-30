@@ -1,7 +1,7 @@
-import StatCard from './_component/stat-card';
-import { Users, Image, Download, Eye } from 'lucide-react';
-import UserGrowthChart from './_component/use-chart';
-import MonthlyImageBarChart from './_component/image-chart';
+import StatCard from "./_component/stat-card";
+import { Users, Image, Download, Eye } from "lucide-react";
+import UserGrowthChart from "./_component/use-chart";
+import MonthlyImageBarChart from "./_component/image-chart";
 
 export default function AdminPage() {
   return (

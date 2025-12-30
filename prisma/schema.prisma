@@ -90,6 +90,21 @@ model Authenticator {
 // ========================
 // Booking models
 // ========================
+// ========================
+// Blog models
+// ========================
+model Blog {
+  id        String   @id @default(cuid())
+  title     String
+  excerpt   String?
+  content   String
+  imageUrl  String?
+  author    String?
+  publishedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([title])
+}
 
 // Thêm bảng loại phòng
 model RoomType {
