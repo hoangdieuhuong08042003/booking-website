@@ -12,7 +12,6 @@ import { Sparkles } from "lucide-react";
 import InputCard from "./components/InputCard";
 import KeywordGroup from "./components/KeywordGroup";
 import ItineraryHeader from "./components/ItineraryHeader";
-import { DayPlan } from "./types";
 import DayCard from "./components/DayCard";
 import RecommendCard from "./components/RecommendCard";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
@@ -20,7 +19,7 @@ import { useTourismApi } from "@/app/hooks/useItinerary";
 
 export default function ItineraryPage() {
   const [province, setProvince] = useState("Huế");
-  const [days, setDays] = useState(2);
+  const [days, setDays] = useState<string[]>([]); // sửa lại: mảng ngày
   const [keywords, setKeywords] = useState<string[]>([]);
   const [imgFallback, setImgFallback] = useState<Record<string, boolean>>({});
 
@@ -141,11 +140,15 @@ export default function ItineraryPage() {
                 <ItineraryHeader itinerary={itinerary} />
                 {/* Day Cards */}
                 <div className="space-y-6">
-                  {itinerary.lịch_trình?.map(
-                    (dayData: DayPlan, dayIndex: number) => (
+                  {itinerary.daily_results?.map(
+                    (dayResult, dayIndex: number) => (
                       <DayCard
                         key={dayIndex}
-                        dayData={dayData}
+                        dayData={{
+                          ...dayResult.plan,
+                          date: dayResult.date,
+                          weather_forecast: dayResult.weather_forecast,
+                        }}
                         dayIndex={dayIndex}
                         imgFallback={imgFallback}
                         setImgFallback={setImgFallback}
@@ -158,28 +161,39 @@ export default function ItineraryPage() {
           )}
         </AnimatePresence>
         {/* Recommend Section */}
-        {recommendations && recommendations.danh_sách_địa_điểm?.length > 0 && (
+        {recommendations && recommendations.results?.length > 0 && (
           <div className="mt-12 space-y-6">
             <h2 className="text-2xl font-bold text-foreground">
               Gợi ý địa điểm nổi bật
             </h2>
             {/* Weather summary */}
-            {recommendations.thông_tin_thời_tiết && (
+            {recommendations.weather_forecast && (
               <div className="mb-2 text-base text-muted-foreground">
                 <span className="font-medium">Thời tiết:</span>{" "}
-                {recommendations.thông_tin_thời_tiết}
+                {Array.isArray(recommendations.weather_forecast)
+                  ? recommendations.weather_forecast.join(" | ")
+                  : recommendations.weather_forecast}
               </div>
             )}
             <div className="flex flex-col gap-6">
-              {recommendations.danh_sách_địa_điểm.map((place, idx) => (
+              {recommendations.results.map((place, idx) => (
                 <RecommendCard
-                  key={place.tên + idx}
-                  place={place}
+                  key={place.name + idx}
+                  place={{
+                    name: place.name,
+                    province: place.province,
+                    description: place.description,
+                    rating: place.rating,
+                    image: place.image,
+                  }}
                   imgFallback={imgFallback}
                   setImgFallback={setImgFallback}
-                  // Chỉ truyền weatherSummary cho card đầu tiên nếu muốn
                   weatherSummary={
-                    idx === 0 ? recommendations.thông_tin_thời_tiết : undefined
+                    idx === 0
+                      ? Array.isArray(recommendations.weather_forecast)
+                        ? recommendations.weather_forecast.join(" | ")
+                        : recommendations.weather_forecast
+                      : undefined
                   }
                 />
               ))}

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { DayPlan } from "../dashboard/itinerary/types"; // add this import
+import type { Location } from "../dashboard/itinerary/types";
 
 // Params cho API tạo lịch trình
 interface ItineraryParams {
   province: string;
-  days: number;
+  days: string[]; // mảng ngày liên tiếp, tối đa 3 ngày, dạng ['dd/mm/yyyy', ...]
   keywords: string[];
 }
 
@@ -14,35 +14,46 @@ interface ItineraryParams {
 interface RecommendParams {
   province: string;
   keywords: string[];
-  days?: number;           // optional, dùng để xem thời tiết
+  days?: string[]; // mảng ngày liên tiếp, tối đa 3 ngày
   num_places?: number;     // optional, 10-15
   consider_weather?: boolean; // optional
 }
 
 // Response types (tùy chỉnh theo thực tế response của bạn)
+export interface ItineraryDayResult {
+  date: string;
+  weather_forecast: string;
+  plan: {
+    "thời tiết": string;
+    "sáng": Location ;
+    "trưa": Location ;
+    "chiều": Location ;
+    "tối_ăn_uống": Location ;
+    "tối": Location ;
+  };
+}
+
 interface ItineraryResponse {
-  tỉnh_thành: string;
-  số_ngày: number;
-  từ_khóa: string[];
-  lịch_trình: DayPlan[]; // changed from any[] to DayPlan[]
-  // ... các field khác
+  daily_results: ItineraryDayResult[];
+  message: string;
+  tỉnh_thành?: string;
+  số_ngày?: number;
+  từ_khóa?: string[];
+}
+
+interface RecommendPlace {
+  name: string;
+  province: string;
+  description: string;
+  image: string;
+  rating: number;
+  "hoạt_động": string; // "ngoài trời" | "trong nhà"
 }
 
 interface RecommendResponse {
-  tỉnh_thành: string;
-  từ_khóa: string[];
-  số_lượng_gợi_ý: number;
-  xem_xét_thời_tiết: boolean;
-  thông_tin_thời_tiết: string; // thêm trường này nếu chưa có
-  danh_sách_địa_điểm: Array<{
-    tên: string;
-    tỉnh: string;
-    mô_tả: string;
-    đánh_giá: number;
-    hình_ảnh: string;
-    hoạt_động: "Trong nhà" | "Ngoài trời";
-    độ_phù_hợp_từ_khóa: number;
-  }>;
+  weather_forecast: string[];
+  results: RecommendPlace[];
+  message: string;
 }
 
 export function useTourismApi() {
@@ -93,7 +104,7 @@ export function useTourismApi() {
       const body: {
         province: string;
         keywords: string[];
-        days?: number;
+        days?: string[];
         num_places?: number;
         consider_weather?: boolean;
       } = {

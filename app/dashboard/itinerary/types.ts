@@ -6,25 +6,47 @@ export interface Weather {
 }
 
 export interface Location {
-  tên: string;
-  hình_ảnh?: string;
-  đánh_giá?: number | string;
-  tỉnh?: string;
-  hoạt_động?: string;
-  mô_tả?: string;
+  name: string;
+  image?: string;
+  rating?: number | string;
+  province?: string;
+  "hoạt_động"?: string;
+  description?: string;
+  
 }
 
-export interface DayPlan {
-  ngày: number | string;
-  date?: string;
-  thời_tiết?: Weather;
-  loại_ngày?: string;
-  lịch_trình: Record<TimeSlot, Location | undefined>;
-}
+
 
 export interface Itinerary {
-  tỉnh_thành: string;
-  số_ngày: number;
+  tỉnh_thành?: string;
+  số_ngày?: number;
   từ_khóa?: string[];
-  lịch_trình?: DayPlan[];
+  daily_results?: ItineraryDayResult[];
+  message?: string;
 }
+
+// Type cho từng ngày trong lịch trình
+export interface ItineraryDayResult {
+  date: string;
+  weather_forecast: string | Weather;
+  plan: {
+    "thời tiết": string;
+    "sáng": Location ;
+    "trưa": Location ;
+    "chiều": Location ;
+    "tối_ăn_uống": Location ;
+    "tối": Location ;
+  };
+}
+
+// Type cho dữ liệu plan từ API
+export type ItineraryPlan = {
+  "thời tiết"?: string;
+  sáng?: Location ;
+  trưa?: Location ;
+  chiều?: Location ;
+  tối_ăn_uống?: Location ;
+  tối?: Location ;
+  date?: string;
+  weather_forecast?: string | Weather;
+};

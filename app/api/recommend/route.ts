@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FLASK_API = "http://127.0.0.1:5000/recommend";
+const FLASK_API = "http://127.0.0.1:5000/recommend_w2v";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +11,11 @@ export async function POST(req: NextRequest) {
         { error: "Missing province / keywords" },
         { status: 400 }
       );
+    }
+
+    // Đảm bảo days là mảng chuỗi ngày nếu có
+    if (body.days && !Array.isArray(body.days)) {
+      body.days = [body.days];
     }
 
     const res = await fetch(FLASK_API, {

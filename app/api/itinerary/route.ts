@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FLASK_API = "http://127.0.0.1:5000/itinerary";
+const FLASK_API = "http://127.0.0.1:5000/itinerary_w2v";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  if (!body.province || !body.days || !body.keywords?.length) {
+  // Kiểm tra days là mảng chuỗi ngày
+  if (!body.province || !body.days || !Array.isArray(body.days) || !body.keywords?.length) {
     return NextResponse.json(
       { error: "Missing province / days / keywords" },
       { status: 400 }
