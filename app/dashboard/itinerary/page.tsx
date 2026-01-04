@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  PRIMARY_CATEGORY,
-  ATTRIBUTES,
-  ACTIVITIES,
-  PHYSICAL_TYPE,
+  PRIMARY_OPTIONS,
+  ATTRIBUTE_OPTIONS,
+  ACTIVITY_OPTIONS,
 } from "@/constants/keywords";
 import { Sparkles } from "lucide-react";
 import InputCard from "./components/InputCard";
@@ -19,8 +18,11 @@ import { useTourismApi } from "@/app/hooks/useItinerary";
 
 export default function ItineraryPage() {
   const [province, setProvince] = useState("Huế");
-  const [days, setDays] = useState<string[]>([]); // sửa lại: mảng ngày
-  const [keywords, setKeywords] = useState<string[]>([]);
+  const [days, setDays] = useState<string[]>([]);
+  // New state for option selections
+  const [primary, setPrimary] = useState<number | null>(0); // index of PRIMARY_OPTIONS
+  const [attributes, setAttributes] = useState<number[]>([]); // indices of ATTRIBUTE_OPTIONS
+  const [activities, setActivities] = useState<number[]>([]); // indices of ACTIVITY_OPTIONS
   const [imgFallback, setImgFallback] = useState<Record<string, boolean>>({});
 
   // const { itinerary, loading, fetchItinerary } = useItinerary();
@@ -33,11 +35,12 @@ export default function ItineraryPage() {
     recommendations,
   } = useTourismApi();
 
-  const toggleKeyword = (k: string) => {
-    setKeywords((prev) =>
-      prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]
-    );
-  };
+  // Map selected options to keywords
+  const selectedKeywords = [
+    ...(primary !== null ? PRIMARY_OPTIONS[primary].map : []),
+    ...attributes.flatMap((idx) => ATTRIBUTE_OPTIONS[idx].map),
+    ...activities.flatMap((idx) => ACTIVITY_OPTIONS[idx].map),
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,7 +87,8 @@ export default function ItineraryPage() {
               setProvince={setProvince}
               days={days}
               setDays={setDays}
-              keywords={keywords}
+              // Pass mapped keywords to InputCard
+              keywords={selectedKeywords}
               loading={itineraryLoading}
               fetchItinerary={fetchItinerary}
               fetchRecommendations={fetchRecommendations}
@@ -94,40 +98,50 @@ export default function ItineraryPage() {
 
           {/* Keywords Section */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Step 1: PRIMARY */}
             <KeywordGroup
-              title="I. Chủ đề chính"
-              items={PRIMARY_CATEGORY}
-              selected={keywords}
-              toggle={toggleKeyword}
+              title="I. Bạn muốn đi đâu?"
+              items={PRIMARY_OPTIONS.map((opt) => opt.label)}
+              selected={primary !== null ? [primary] : []}
+              toggle={(idx: number) => setPrimary(idx === primary ? null : idx)}
               delay={0.3}
             />
+            {/* Step 2: ATTRIBUTES */}
             <KeywordGroup
-              title="II. Đặc điểm / Tính chất"
-              items={ATTRIBUTES}
-              selected={keywords}
-              toggle={toggleKeyword}
+              title="II. Cảm giác mong muốn"
+              items={ATTRIBUTE_OPTIONS.map((opt) => opt.label)}
+              selected={attributes}
+              toggle={(idx: number) => {
+                setAttributes((prev) =>
+                  prev.includes(idx)
+                    ? prev.filter((i) => i !== idx)
+                    : prev.length < 2
+                    ? [...prev, idx]
+                    : prev
+                );
+              }}
               delay={0.4}
             />
+            {/* Step 3: ACTIVITIES */}
             <KeywordGroup
-              title="III. Hoạt động"
-              items={ACTIVITIES}
-              selected={keywords}
-              toggle={toggleKeyword}
+              title="III. Muốn làm gì?"
+              items={ACTIVITY_OPTIONS.map((opt) => opt.label)}
+              selected={activities}
+              toggle={(idx: number) => {
+                setActivities((prev) =>
+                  prev.includes(idx)
+                    ? prev.filter((i) => i !== idx)
+                    : [...prev, idx]
+                );
+              }}
               delay={0.5}
-            />
-            <KeywordGroup
-              title="IV. Loại địa hình"
-              items={PHYSICAL_TYPE}
-              selected={keywords}
-              toggle={toggleKeyword}
-              delay={0.6}
             />
           </div>
         </div>
 
         {/* Result Section */}
         <AnimatePresence mode="wait">
-          {itinerary && (
+          {itinerary && itinerary.daily_results?.length > 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
@@ -158,10 +172,17 @@ export default function ItineraryPage() {
                 </div>
               </div>
             </motion.div>
-          )}
+          ) : itinerary &&
+            (!itinerary.daily_results ||
+              itinerary.daily_results.length === 0) ? (
+            <div className="mt-12 text-center text-destructive text-lg font-medium">
+              Không tìm thấy lịch trình phù hợp với lựa chọn của bạn. Vui lòng
+              thử lại với từ khóa hoặc tỉnh/thành khác.
+            </div>
+          ) : null}
         </AnimatePresence>
         {/* Recommend Section */}
-        {recommendations && recommendations.results?.length > 0 && (
+        {recommendations && recommendations.results?.length > 0 ? (
           <div className="mt-12 space-y-6">
             <h2 className="text-2xl font-bold text-foreground">
               Gợi ý địa điểm nổi bật
@@ -199,7 +220,13 @@ export default function ItineraryPage() {
               ))}
             </div>
           </div>
-        )}
+        ) : recommendations &&
+          (!recommendations.results || recommendations.results.length === 0) ? (
+          <div className="mt-12 text-center text-destructive text-lg font-medium">
+            Không tìm thấy địa điểm phù hợp với lựa chọn của bạn. Vui lòng thử
+            lại với từ khóa hoặc tỉnh/thành khác.
+          </div>
+        ) : null}
       </div>
     </div>
   );

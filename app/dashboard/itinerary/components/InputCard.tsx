@@ -2,7 +2,10 @@
 
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Sparkles, Clock, Map } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Import getProvinces server action
+import { getProvinces } from "@/app/_actions/listing/listing-province-actions";
 
 export default function InputCard({
   province,
@@ -90,6 +93,26 @@ export default function InputCard({
   // Hiển thị ngày đã chọn
   const displayDays = days && days.length > 0 ? days.join(", ") : "Chưa chọn";
 
+  // State for provinces and search
+  const [provinces, setProvinces] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [provinceSearch, setProvinceSearch] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Fetch provinces on mount
+  useEffect(() => {
+    getProvinces().then((data) => setProvinces(data));
+  }, []);
+
+  // Filtered provinces by search
+  const filteredProvinces =
+    provinceSearch.trim().length === 0
+      ? provinces
+      : provinces.filter((p) =>
+          p.name.toLowerCase().includes(provinceSearch.toLowerCase())
+        );
+
   return (
     <div className="bg-card border border-border rounded-2xl p-6 shadow-lg sticky top-6">
       <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
@@ -105,11 +128,47 @@ export default function InputCard({
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
-              value={province}
-              onChange={(e) => setProvince(e.target.value)}
-              placeholder="Nhập tên tỉnh thành..."
+              type="text"
+              value={
+                showDropdown
+                  ? provinceSearch
+                  : provinces.find((p) => p.name === province)?.name || province
+              }
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+              onChange={(e) => {
+                setProvinceSearch(e.target.value);
+                setShowDropdown(true);
+              }}
+              placeholder="Tìm kiếm tỉnh/thành phố..."
               className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
+              autoComplete="off"
             />
+            {showDropdown && (
+              <div className="absolute z-10 left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                {filteredProvinces.length === 0 ? (
+                  <div className="px-4 py-2 text-muted-foreground text-sm">
+                    Không tìm thấy
+                  </div>
+                ) : (
+                  filteredProvinces.map((p) => (
+                    <div
+                      key={p.id}
+                      className={`px-4 py-2 cursor-pointer hover:bg-accent/30 ${
+                        province === p.name ? "bg-accent/20 font-semibold" : ""
+                      }`}
+                      onMouseDown={() => {
+                        setProvince(p.name);
+                        setProvinceSearch(p.name);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      {p.name}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
 

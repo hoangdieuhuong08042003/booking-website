@@ -11,8 +11,8 @@ export default function KeywordGroup({
 }: {
   title: string;
   items: string[];
-  selected: string[];
-  toggle: (k: string) => void;
+  selected: number[];
+  toggle: (idx: number) => void;
   delay?: number;
 }) {
   return (
@@ -27,7 +27,7 @@ export default function KeywordGroup({
         {items.map((k, idx) => (
           <motion.button
             key={k}
-            onClick={() => toggle(k)}
+            onClick={() => toggle(idx)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, scale: 0.8 }}
@@ -35,7 +35,7 @@ export default function KeywordGroup({
             transition={{ duration: 0.3, delay: delay + idx * 0.05 }}
             className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-all duration-300
               ${
-                selected.includes(k)
+                selected.includes(idx)
                   ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30"
                   : "bg-card text-card-foreground border-border hover:border-primary/50 hover:bg-accent"
               }`}
