@@ -19,6 +19,7 @@ import {
   Settings,
   CalendarCheck2,
   Users2,
+  BookOpen, // thêm icon cho blog
 } from "lucide-react";
 import Link from "next/link";
 
@@ -124,6 +125,35 @@ export default function AppSidebar() {
                   />
                   <span className="ml-2 group-data-[collapsible=icon]:hidden">
                     Quản lý tiện ích
+                  </span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            {/* Quản lý blog */}
+            <SidebarMenuItem>
+              <Link href="/admin/blogs" className="w-full">
+                <SidebarMenuButton
+                  tooltip="Quản lý blog"
+                  size="lg"
+                  className={`
+                    p-3 h-fit flex items-center
+                    ${
+                      pathname === "/admin/blogs"
+                        ? "bg-gray-100 font-semibold rounded-md dark:bg-[#AAAAAA]/20"
+                        : ""
+                    }
+                    group-data-[state=collapsed]:justify-center cursor-pointer
+                  `}
+                >
+                  <BookOpen
+                    className={`size-6 dark:text-gray-300 ${
+                      pathname === "/admin/blogs"
+                        ? "text-black dark:text-gray-200"
+                        : ""
+                    }`}
+                  />
+                  <span className="ml-2 group-data-[collapsible=icon]:hidden">
+                    Quản lý blog
                   </span>
                 </SidebarMenuButton>
               </Link>

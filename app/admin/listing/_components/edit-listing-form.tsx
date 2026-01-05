@@ -288,12 +288,24 @@ export function EditListingForm({ listingId }: { listingId: string }) {
         <div className="relative w-full aspect-video border rounded-lg overflow-hidden">
           {thumbnail ? (
             <>
-              <Image
-                src={thumbnail}
-                alt="Thumbnail"
-                fill
-                className="object-cover"
-              />
+              {/* Make the image clickable to upload a new image */}
+              <label className="absolute inset-0 cursor-pointer">
+                <Image
+                  src={thumbnail}
+                  alt="Thumbnail"
+                  fill
+                  className="object-cover"
+                />
+                <Input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) =>
+                    e.target.files && uploadThumbnail(e.target.files[0])
+                  }
+                  disabled={uploading}
+                />
+              </label>
               <Button
                 type="button"
                 size="icon"
@@ -315,6 +327,7 @@ export function EditListingForm({ listingId }: { listingId: string }) {
                 onChange={(e) =>
                   e.target.files && uploadThumbnail(e.target.files[0])
                 }
+                disabled={uploading}
               />
             </label>
           )}

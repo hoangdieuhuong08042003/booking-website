@@ -1,20 +1,25 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import type { Blog } from "@prisma/client";
 
 // Create a new blog post
 export async function createBlog(data: {
   title: string;
-  excerpt?: string;
+  excerpt?: string | null;
   content: string;
-  imageUrl?: string;
-  author?: string;
-  publishedAt?: Date;
+  imageUrl?: string | null;
+  author?: string | null;
+  publishedAt?: Date | string;
 }) {
   const blog = await prisma.blog.create({
     data: {
-      ...data,
-      publishedAt: data.publishedAt ?? new Date(),
+      title: data.title,
+      excerpt: data.excerpt ?? null,
+      content: data.content,
+      imageUrl: data.imageUrl ?? null,
+      author: data.author ?? null,
+      publishedAt: data.publishedAt ? new Date(data.publishedAt) : new Date(),
     },
     select: {
       id: true,
@@ -31,7 +36,7 @@ export async function createBlog(data: {
 }
 
 // Get all blog posts
-export async function getBlogs() {
+export async function getBlogs(): Promise<Blog[]> {
   return prisma.blog.findMany({
     orderBy: { publishedAt: "desc" },
     select: {
@@ -44,11 +49,11 @@ export async function getBlogs() {
       publishedAt: true,
       updatedAt: true,
     },
-  });
+  }) as unknown as Blog[];
 }
 
 // Get a single blog post by ID
-export async function getBlogById(id: string) {
+export async function getBlogById(id: string): Promise<Blog | null> {
   return prisma.blog.findUnique({
     where: { id },
     select: {
@@ -61,21 +66,30 @@ export async function getBlogById(id: string) {
       publishedAt: true,
       updatedAt: true,
     },
-  });
+  }) as unknown as Blog | null;
 }
 
 // Update a blog post
-export async function updateBlog(id: string, data: {
-  title?: string;
-  excerpt?: string;
-  content?: string;
-  imageUrl?: string;
-  author?: string;
-  publishedAt?: Date;
-}) {
+export async function updateBlog(
+  id: string,
+  data: {
+    title?: string;
+    excerpt?: string | null;
+    content?: string;
+    imageUrl?: string | null;
+    author?: string | null;
+    publishedAt?: Date | string;
+  }
+): Promise<Blog> {
   const updated = await prisma.blog.update({
     where: { id },
-    data,
+    data: {
+      ...data,
+      excerpt: data.excerpt ?? null,
+      imageUrl: data.imageUrl ?? null,
+      author: data.author ?? null,
+      publishedAt: data.publishedAt ? new Date(data.publishedAt) : undefined,
+    },
     select: {
       id: true,
       title: true,
@@ -87,13 +101,13 @@ export async function updateBlog(id: string, data: {
       updatedAt: true,
     },
   });
-  return updated;
+  return updated as Blog;
 }
 
 // Delete a blog post
-export async function deleteBlog(id: string) {
+export async function deleteBlog(id: string): Promise<Pick<Blog, "id">> {
   return prisma.blog.delete({
     where: { id },
     select: { id: true },
-  });
+  }) as unknown as Pick<Blog, "id">;
 }

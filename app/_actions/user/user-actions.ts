@@ -4,19 +4,14 @@ import { prisma } from "@/lib/prisma";
 
 import bcrypt, { compare } from "bcryptjs";
 import { getUserId } from "./get-user";
-import { User } from "@prisma/client";
-
+import { User, Prisma } from "@prisma/client";
 
 const UserExceptPasswordQuery = {
   id: true,
   name: true,
   email: true,
   emailVerified: true,
-  occupation: true,
-  experience: true,
-  description: true,
-  image: true,
-  language: true,
+  image: true, // <-- Add this line
   createdAt: true,
   updatedAt: true,
   role: true,
@@ -140,6 +135,85 @@ async function deleteUser(id: string): Promise<User> {
   return await prisma.user.delete({ where: { id } });
 }
 
+// ADMIN: Lấy danh sách user (có tìm kiếm, phân trang)
+async function adminListUsers({
+  pageIndex = 0,
+  pageSize = 20,
+  search = "",
+}: {
+  pageIndex?: number;
+  pageSize?: number;
+  search?: string;
+}) {
+  const where =
+    search && search.trim()
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {};
+
+  const total = await prisma.user.count({ where });
+  const users = await prisma.user.findMany({
+    where,
+    skip: pageIndex * pageSize,
+    take: pageSize,
+    orderBy: { createdAt: "desc" },
+    select: UserExceptPasswordQuery,
+  });
+
+  // Đảm bảo luôn trả về mảng users (không phải null/undefined)
+  return { users: users ?? [], total };
+}
+
+// ADMIN: Tạo user
+async function adminCreateUser(data: {
+  name: string;
+  email: string;
+  password: string;
+  role?: string;
+}) {
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+  return await prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      password: hashedPassword,
+      role: data.role ?? "USER",
+      emailVerified: new Date(),
+    },
+    select: UserExceptPasswordQuery,
+  });
+}
+
+// ADMIN: Sửa user
+async function adminUpdateUser(
+  id: string,
+  data: Partial<Omit<User, "password">> & { password?: string }
+) {
+  const updateData: Prisma.UserUpdateInput = { ...data };
+  if (data.password) {
+    updateData.password = await bcrypt.hash(data.password, 10);
+  } else {
+    delete updateData.password;
+  }
+  return await prisma.user.update({
+    where: { id },
+    data: updateData,
+    select: UserExceptPasswordQuery,
+  });
+}
+
+// ADMIN: Xóa user
+async function adminDeleteUser(id: string) {
+  return await prisma.user.delete({
+    where: { id },
+    select: UserExceptPasswordQuery,
+  });
+}
+
 export {
   createUser,
   getUserByEmail,
@@ -148,4 +222,8 @@ export {
   updateUser,
   changePassword,
   deleteUser,
+  adminListUsers,
+  adminCreateUser,
+  adminUpdateUser,
+  adminDeleteUser,
 };

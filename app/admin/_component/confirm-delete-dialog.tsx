@@ -5,8 +5,8 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmDeleteDialogProps {
   open: boolean;
@@ -23,15 +23,15 @@ export default function ConfirmDeleteDialog({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>削除の確認</DialogTitle>
+          <DialogTitle>Xác nhận xoá</DialogTitle>
         </DialogHeader>
-        <div>この商品を削除してもよろしいですか？</div>
+        <div>Bạn có chắc chắn muốn xoá mục này?</div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">キャンセル</Button>
+            <Button variant="outline">Huỷ</Button>
           </DialogClose>
           <Button variant="default" onClick={onConfirm}>
-            削除
+            Xoá
           </Button>
         </DialogFooter>
       </DialogContent>
