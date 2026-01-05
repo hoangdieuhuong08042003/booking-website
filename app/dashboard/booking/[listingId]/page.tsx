@@ -429,7 +429,7 @@ export default function BookingPage() {
               <div className="pt-4 mb-6">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Tổng cộng</span>
-                  <span className="text-2xl font-bold text-accent">
+                  <span className="text-2xl font-bold text-red-600">
                     {totalPrice.toLocaleString("vi-VN")} ₫
                   </span>
                 </div>
