@@ -13,7 +13,11 @@ async function createAmenity(data: { name: string }) {
  * Lấy tất cả amenity
  */
 async function listAmenities() {
-	return await prisma.amenity.findMany({ select: { id: true, name: true } });
+	return await prisma.amenity.findMany({
+		select: { id: true, name: true },
+		// Ưu tiên createdAt nếu có, nếu không thì id
+		orderBy: { id: "desc" },
+	});
 }
 
 /**
@@ -42,7 +46,10 @@ async function getRoomTypes() {
 
 // Lấy tất cả tiện nghi
 async function getAmenity() {
-	return await prisma.amenity.findMany({ select: { id: true, name: true } });
+	return await prisma.amenity.findMany({
+		select: { id: true, name: true },
+		orderBy: { id: "desc" },
+	});
 }
 
 export {
@@ -52,4 +59,42 @@ export {
 	removeAmenity,
 	getRoomTypes,
 	getAmenity,
+};
+
+/**
+ * Tạo RoomType mới
+ */
+async function createRoomType(data: { name: string; desc?: string }) {
+	return await prisma.roomType.create({ data, select: { id: true, name: true, desc: true } });
+}
+
+/**
+ * Lấy tất cả RoomType
+ */
+async function listRoomTypes() {
+	return await prisma.roomType.findMany({
+		select: { id: true, name: true, desc: true },
+		orderBy: { id: "desc" },
+	});
+}
+
+/**
+ * Cập nhật RoomType
+ */
+async function updateRoomType(id: string, data: { name?: string; desc?: string }) {
+	return await prisma.roomType.update({ where: { id }, data, select: { id: true, name: true, desc: true } });
+}
+
+/**
+ * Xóa RoomType
+ */
+async function removeRoomType(id: string) {
+	return await prisma.roomType.delete({ where: { id }, select: { id: true } });
+}
+
+export {
+	createRoomType,
+	listRoomTypes,
+	updateRoomType,
+	removeRoomType,
 };

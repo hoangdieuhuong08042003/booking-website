@@ -263,7 +263,7 @@ async function getBookingsByUser(userId: string): Promise<(Reservation & { listi
         select: { name: true }, // only 'name' exists on Listing in schema
       },
     },
-    orderBy: { startDate: "desc" },
+    orderBy: { createdAt: "desc" }, // Sắp xếp mới nhất lên đầu
   });
 
   // narrow the type explicitly instead of using `any`
@@ -361,7 +361,7 @@ async function adminListReservations({
 
   const reservations = await prisma.reservation.findMany({
     where,
-    orderBy: { startDate: "desc" },
+    orderBy: { createdAt: "desc" }, // Sắp xếp mới nhất lên đầu
     skip: pageIndex * pageSize,
     take: pageSize,
     include: {

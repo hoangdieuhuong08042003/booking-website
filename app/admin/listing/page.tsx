@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { createListing } from "@/app/_actions/listing";
 import CreateDialog from "../_component/create-dialog";
 import { ListingDataTable } from "./_components/listing-data-table";
+import { Listing } from "@prisma/client";
 
 const ListingPage = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -13,7 +14,7 @@ const ListingPage = () => {
 
   const handleCreate = async (data: { name: string }) => {
     try {
-      await createListing({
+      const newListing = await createListing({
         name: data.name,
         type: "",
         desc: "",
@@ -22,7 +23,19 @@ const ListingPage = () => {
         thumbnail: "",
       });
       toast.success("Listing đã được tạo thành công!");
-      queryClient.invalidateQueries({ queryKey: ["listings"] });
+      // Prepend new listing to the first page cache if exists
+      queryClient.setQueryData(
+        ["listings", 0, 10, "", null, null],
+        (old: { listings: Listing[]; total: number } | undefined) =>
+          old
+            ? {
+                ...old,
+                listings: [newListing, ...(old.listings || [])],
+                total: (old.total || 0) + 1,
+              }
+            : undefined
+      );
+      // Optionally, you can also invalidate for other queries if needed
     } catch {
       toast.error("Tạo listing thất bại.");
     }

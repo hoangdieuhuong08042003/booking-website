@@ -27,15 +27,12 @@ export const formSchema = z
     name: z
       .string()
       .trim()
-      .min(1, "名前は必須です")
-      .max(50, "名前は50文字以内で入力してください。")
-      .regex(
-        /^[\p{L}\p{N}\s]+$/u,
-        "名前は文字、数字、スペースのみで入力してください"
-      ),
+      .min(1, "Tên là bắt buộc")
+      .max(50, "Tên không được vượt quá 50 ký tự.")
+      .regex(/^[\p{L}\p{N}\s]+$/u, "Tên chỉ được chứa chữ, số và khoảng trắng"),
   })
   .extend({
-    order: z.number().min(0).optional(),
+    order: z.number().min(0, "Thứ tự phải lớn hơn hoặc bằng 0").optional(),
   });
 
 interface CreateDialogProps {
@@ -54,7 +51,7 @@ export default function CreateDialog({
   onCreate,
   title,
   label,
-  errorMessage = "作成に失敗しました。",
+  errorMessage = "Tạo mới thất bại.",
   haveOrder = false,
 }: CreateDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,7 +92,11 @@ export default function CreateDialog({
                 <FormItem>
                   <FormLabel>{label}</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled={isSubmitting} />
+                    <Input
+                      {...field}
+                      disabled={isSubmitting}
+                      placeholder="Nhập tên..."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -107,7 +108,7 @@ export default function CreateDialog({
                 name="order"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>表示順</FormLabel>
+                    <FormLabel>Thứ tự hiển thị</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -121,7 +122,7 @@ export default function CreateDialog({
                           field.onChange(value);
                         }}
                         disabled={isSubmitting}
-                        placeholder="例: 1"
+                        placeholder="Ví dụ: 1"
                       />
                     </FormControl>
                     <FormMessage />
@@ -136,10 +137,10 @@ export default function CreateDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
               >
-                キャンセル
+                Hủy
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "作成中..." : "作成"}
+                {isSubmitting ? "Đang tạo..." : "Tạo mới"}
               </Button>
             </div>
           </form>

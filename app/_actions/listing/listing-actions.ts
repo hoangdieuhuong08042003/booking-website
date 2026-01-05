@@ -73,7 +73,7 @@ async function createListing(data: {
 // Thêm: lấy tất cả listings (không giới hạn số lượng)
 async function getNewestListings() {
   const listings = await prisma.listing.findMany({
-    orderBy: { avgRating: "desc" },
+    orderBy: { createdAt: "desc" }, // Sắp xếp mới nhất lên đầu theo thời gian tạo
     select: {
       id: true,
       name: true,
@@ -319,7 +319,7 @@ async function getListingPriceRange() {
  */
 async function listListings() {
   const listings = await prisma.listing.findMany({
-    orderBy: { id: "desc" }, // Sử dụng id thay cho createdAt
+    orderBy: { createdAt: "desc" }, // Sắp xếp mới nhất lên đầu
     select: {
       id: true,
       name: true,

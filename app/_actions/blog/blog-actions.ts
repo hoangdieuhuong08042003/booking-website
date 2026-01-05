@@ -38,7 +38,10 @@ export async function createBlog(data: {
 // Get all blog posts
 export async function getBlogs(): Promise<Blog[]> {
   return prisma.blog.findMany({
-    orderBy: { publishedAt: "desc" },
+    orderBy: [
+      { publishedAt: "desc" },
+      { id: "desc" }
+    ],
     select: {
       id: true,
       title: true,

@@ -8,9 +8,9 @@ import {
   deleteBlog,
 } from "@/app/_actions/blog/blog-actions";
 import BlogDataTable from "./_component/blog-data-table";
-import BlogCreateDialog from "./_component/blog-create-dialog";
 import { toast } from "sonner";
 import type { Blog } from "@prisma/client";
+import CreateDialog from "../_component/create-dialog"; // import dialog
 
 export default function BlogManagementPage() {
   const queryClient = useQueryClient();
@@ -51,6 +51,7 @@ export default function BlogManagementPage() {
           : undefined,
       }),
     onSuccess: (newBlog: Blog) => {
+      // Prepend new blog to the top of the list so it appears immediately
       queryClient.setQueryData<Blog[]>(["blogs"], (old: Blog[] = []) => [
         newBlog,
         ...old,
@@ -84,9 +85,16 @@ export default function BlogManagementPage() {
   });
 
   // Handler cho BlogCreateDialog
-  // Sử dụng Partial<Blog> cho data
   const handleCreate = () => {
     setCreateDialogOpen(true);
+  };
+
+  const handleCreateBlog = async (data: { name: string }) => {
+    // Map dialog data to blog fields
+    await createMutation.mutateAsync({
+      title: data.name,
+      content: "", // You may want to extend the dialog to accept content
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -95,24 +103,18 @@ export default function BlogManagementPage() {
 
   return (
     <>
+      <CreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreateBlog}
+        title="Tạo mới blog"
+        label="Tiêu đề blog"
+        errorMessage="Tạo blog thất bại."
+      />
       <BlogDataTable
         blogs={tableBlogs}
         onCreate={handleCreate}
         onDelete={handleDelete}
-      />
-      <BlogCreateDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onCreate={async (data) => {
-          createMutation.mutate({
-            title: data.title,
-            content: "",
-            excerpt: "",
-            imageUrl: "",
-            author: "",
-            publishedAt: undefined,
-          });
-        }}
       />
     </>
   );

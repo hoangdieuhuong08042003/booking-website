@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import ConfirmDeleteDialog from "../../_component/confirm-delete-dialog";
 import { DataTable } from "../../_component/data-table";
 import { ActionButtons } from "../../_component/action-buttons";
-import BlogCreateDialog from "./blog-create-dialog";
 
 // Đúng kiểu Blog như Prisma
 export interface Blog {
@@ -32,7 +31,6 @@ export default function BlogDataTable({
   onCreate,
   onDelete,
 }: BlogDataTableProps) {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const router = useRouter();
 
@@ -91,14 +89,6 @@ export default function BlogDataTable({
 
   return (
     <>
-      <BlogCreateDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onCreate={async () => {
-          setIsCreateDialogOpen(false);
-          onCreate();
-        }}
-      />
       <ConfirmDeleteDialog
         open={!!deleteId}
         onCancel={() => setDeleteId(null)}
@@ -118,7 +108,7 @@ export default function BlogDataTable({
             <span className="sm:hidden ">Thêm</span>
           </>
         }
-        onAddClick={() => setIsCreateDialogOpen(true)}
+        onAddClick={onCreate}
         pageSize={10}
       />
     </>
