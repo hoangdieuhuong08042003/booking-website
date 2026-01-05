@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Calendar,
@@ -85,6 +85,27 @@ export function FilterSidebar({
   const [priceSlider, setPriceSlider] = useState<[number, number]>([
     0, 10000000,
   ]);
+
+  // Thay vì state cho input riêng, dùng state cho filter trong dropdown
+  const [provinceDropdownOpen, setProvinceDropdownOpen] = useState(false);
+  const [provinceSearch, setProvinceSearch] = useState("");
+  const provinceDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Đóng dropdown khi click ngoài
+  useEffect(() => {
+    if (!provinceDropdownOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (
+        provinceDropdownRef.current &&
+        !provinceDropdownRef.current.contains(e.target as Node)
+      ) {
+        setProvinceDropdownOpen(false);
+        setProvinceSearch("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [provinceDropdownOpen]);
 
   // Fetch Provinces
   useEffect(() => {
@@ -219,22 +240,81 @@ export function FilterSidebar({
             <MapPin className="w-4 h-4 text-primary" />
             Tỉnh/Thành phố
           </label>
-          <select
-            value={filters.location}
-            onChange={(e) => updateFilter("location", e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/30 transition"
-          >
-            <option value="">Chọn tỉnh/thành phố</option>
-            {loadingProvinces ? (
-              <option disabled>Đang tải...</option>
-            ) : (
-              provinces.map((p) => (
-                <option key={p.province_id} value={p.province_id}>
-                  {p.province_name}
-                </option>
-              ))
+          {/* Dropdown với ô tìm kiếm bên trong */}
+          <div className="relative" ref={provinceDropdownRef}>
+            <button
+              type="button"
+              className="w-full px-3 py-2 border rounded-lg bg-white text-left focus:ring-2 focus:ring-primary/30 transition"
+              onClick={() => setProvinceDropdownOpen((v) => !v)}
+            >
+              {filters.location
+                ? provinces.find((p) => p.province_id === filters.location)
+                    ?.province_name || "Chọn tỉnh/thành phố"
+                : "Chọn tỉnh/thành phố"}
+            </button>
+            {provinceDropdownOpen && (
+              <div className="absolute z-20 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-64 overflow-auto">
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Tìm tỉnh/thành phố..."
+                  value={provinceSearch}
+                  onChange={(e) => setProvinceSearch(e.target.value)}
+                  className="w-full px-3 py-2 border-b outline-none"
+                />
+                <ul>
+                  <li>
+                    <button
+                      type="button"
+                      className={`w-full text-left px-3 py-2 hover:bg-primary/10 ${
+                        !filters.location ? "font-semibold" : ""
+                      }`}
+                      onClick={() => {
+                        updateFilter("location", "");
+                        setProvinceDropdownOpen(false);
+                        setProvinceSearch("");
+                      }}
+                    >
+                      Chọn tỉnh/thành phố
+                    </button>
+                  </li>
+                  {loadingProvinces ? (
+                    <li>
+                      <span className="block px-3 py-2 text-gray-400">
+                        Đang tải...
+                      </span>
+                    </li>
+                  ) : (
+                    provinces
+                      .filter((p) =>
+                        p.province_name
+                          .toLowerCase()
+                          .includes(provinceSearch.trim().toLowerCase())
+                      )
+                      .map((p) => (
+                        <li key={p.province_id}>
+                          <button
+                            type="button"
+                            className={`w-full text-left px-3 py-2 hover:bg-primary/10 ${
+                              filters.location === p.province_id
+                                ? "font-semibold bg-primary/10"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              updateFilter("location", p.province_id);
+                              setProvinceDropdownOpen(false);
+                              setProvinceSearch("");
+                            }}
+                          >
+                            {p.province_name}
+                          </button>
+                        </li>
+                      ))
+                  )}
+                </ul>
+              </div>
             )}
-          </select>
+          </div>
         </div>
 
         <div className="border-t pt-5 flex flex-col gap-2">
