@@ -62,7 +62,7 @@ async function createListing(data: {
       },
       province: { select: { id: true, name: true } },
       ward: { select: { id: true, name: true } },
-      
+      createdAt: true, // <--- ADD THIS
     },
   });
 
@@ -100,6 +100,7 @@ async function getNewestListings() {
           },
         },
       },
+      createdAt: true, // <--- ADD THIS
     },
   });
 
@@ -293,6 +294,7 @@ async function getListingByFilter({
           },
         },
       },
+      createdAt: true, // <--- ADD THIS
     },
   });
 

@@ -55,6 +55,13 @@ export function DashboardHeader() {
               Booking của tôi
             </Button>
           </Link>
+          <Link href="/dashboard/blog">
+            <Button
+              variant={pathname === "/dashboard/blog" ? "secondary" : "ghost"}
+            >
+              Blog
+            </Button>
+          </Link>
 
           <UserButton />
         </div>
