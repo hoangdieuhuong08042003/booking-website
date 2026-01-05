@@ -169,6 +169,7 @@ model Listing {
   roomType   RoomType? @relation(fields: [roomTypeId], references: [id])
 
   avgRating   Float @default(0)
+  createdAt     DateTime  @default(now())
 
   reviews      Review[]
   reservations Reservation[]

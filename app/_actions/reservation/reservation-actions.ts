@@ -432,6 +432,36 @@ async function adminDeleteReservation(reservationId: string) {
   return deleted;
 }
 
+/**
+ * Thống kê số lượng đặt phòng theo từng tháng trong năm hiện tại
+ */
+async function getReservationCountByMonth(year?: number) {
+  const now = new Date();
+  const targetYear = year ?? now.getFullYear();
+
+  // Đếm tất cả reservation trong năm, không lọc trạng thái
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      createdAt: {
+        gte: new Date(targetYear, 0, 1),
+        lt: new Date(targetYear + 1, 0, 1),
+      },
+    },
+    select: { createdAt: true },
+  });
+
+  const counts = Array(12).fill(0);
+  reservations.forEach((r) => {
+    const month = r.createdAt.getMonth();
+    counts[month]++;
+  });
+
+  return counts.map((count, idx) => ({
+    month: idx + 1,
+    count,
+  }));
+}
+
 export {
   createReservation,
   cancelReservation,
@@ -444,4 +474,5 @@ export {
   adminGetReservationById,
   adminUpdateReservation,
   adminDeleteReservation,
+  getReservationCountByMonth,
 };

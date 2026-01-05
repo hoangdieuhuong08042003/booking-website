@@ -486,6 +486,38 @@ async function getImagesByListingId(listingId: string) {
 
 // (REMOVE) createReservation implementation moved to reservation-actions.ts
 
+/**
+ * Thống kê số lượng nhà nghỉ được tạo theo từng tháng trong năm hiện tại
+ */
+async function getListingCountByMonth(year?: number) {
+  const now = new Date();
+  const targetYear = year ?? now.getFullYear();
+
+  // Lấy tất cả listing trong năm
+  const listings = await prisma.listing.findMany({
+    where: {
+      AND: [
+        { createdAt: { gte: new Date(targetYear, 0, 1) } },
+        { createdAt: { lt: new Date(targetYear + 1, 0, 1) } },
+      ],
+    },
+    select: { createdAt: true },
+  });
+
+  // Đếm số lượng theo tháng
+  const counts = Array(12).fill(0);
+  listings.forEach((l) => {
+    const month = l.createdAt.getMonth(); // 0-11
+    counts[month]++;
+  });
+
+  // Trả về dạng [{ month: 1, count: ... }, ...]
+  return counts.map((count, idx) => ({
+    month: idx + 1,
+    count,
+  }));
+}
+
 export {
   createListing,
   getNewestListings,
@@ -496,8 +528,9 @@ export {
   listListings,
   updateListing,
   deleteListing,
-  // ListingImage CRUD
+  
   createListingImage,
   deleteListingImage,
   getImagesByListingId,
+  getListingCountByMonth,
 };
