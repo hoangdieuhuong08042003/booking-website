@@ -1,11 +1,11 @@
-import type React from 'react';
-import type { Metadata } from 'next';
-import AdminLayout from './_component/admin-layout';
-import HeaderAdmin from './_component/header-admin';
+import type React from "react";
+import type { Metadata } from "next";
+import AdminLayout from "./_component/admin-layout";
+import HeaderAdmin from "./_component/header-admin";
 
 export const metadata: Metadata = {
-  title: 'Ex Gallery | Management',
-  description: 'Ex Gallery の管理画面',
+  title: "Ex Gallery | Management",
+  description: "Ex Gallery の管理画面",
 };
 
 export default function ProductsLayout({
@@ -16,7 +16,7 @@ export default function ProductsLayout({
   return (
     <AdminLayout metadata={metadata}>
       <HeaderAdmin />
-      {children}
+      <div className="mt-20">{children}</div>
     </AdminLayout>
   );
 }

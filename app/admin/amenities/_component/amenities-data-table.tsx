@@ -29,17 +29,17 @@ export default function AmenityDataTable({
   const columns: ColumnDef<Amenity>[] = [
     {
       accessorKey: "stt",
-      header: "番号",
+      header: "STT",
       cell: ({ row }) => <p className="text-center">{row.index + 1}</p>,
     },
     {
       accessorKey: "name",
-      header: "アメニティ名",
+      header: "Tên tiện nghi",
       cell: ({ row }) => <p className="text-center">{row.original.name}</p>,
     },
     {
       id: "actions",
-      header: "アクション",
+      header: "Hành động",
       cell: ({ row }) => (
         <ActionButtons
           onEdit={() => setEditingAmenity(row.original)}
@@ -55,9 +55,9 @@ export default function AmenityDataTable({
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         onCreate={onCreate}
-        title="アメニティを作成"
-        label="名前"
-        errorMessage="アメニティの作成に失敗しました。"
+        title="Tạo tiện nghi"
+        label="Tên"
+        errorMessage="Tạo tiện nghi thất bại."
       />
       <AmenityEditDialog
         open={!!editingAmenity}
@@ -79,12 +79,12 @@ export default function AmenityDataTable({
       <DataTable
         columns={columns}
         data={amenities}
-        filterPlaceholder="アメニティを検索..."
+        filterPlaceholder="Tìm kiếm tiện nghi..."
         addButtonText={
           <>
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">アメニティを追加</span>
-            <span className="sm:hidden ">追加</span>
+            <span className="hidden sm:inline">Thêm tiện nghi</span>
+            <span className="sm:hidden ">Thêm</span>
           </>
         }
         onAddClick={() => setIsCreateDialogOpen(true)}

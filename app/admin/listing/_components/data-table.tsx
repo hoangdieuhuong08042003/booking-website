@@ -36,12 +36,12 @@ import {
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ColumnNames: Record<string, string> = {
-  id: "番号",
-  category: "カテゴリー",
-  image: "画像",
-  name: "名前",
-  price: "価格",
-  description: "説明",
+  id: "STT",
+  category: "Danh mục",
+  image: "Hình ảnh",
+  name: "Tên",
+  price: "Giá",
+  description: "Mô tả",
 };
 
 interface DataTableProps<TData, TValue> {
@@ -74,7 +74,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  filterPlaceholder = "検索...",
+  filterPlaceholder = "Tìm kiếm...",
   addButtonText,
   onRowClick,
   filterOptions = [],
@@ -190,7 +190,7 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 className="flex h-9 items-center gap-1 px-3"
               >
-                <span className="text-xs font-medium">列の表示</span>
+                <span className="text-xs font-medium">Hiển thị cột</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -312,7 +312,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center text-sm text-muted-foreground"
                 >
-                  該当するデータがありません。
+                  Không có dữ liệu phù hợp.
                 </TableCell>
               </TableRow>
             )}
@@ -323,7 +323,7 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between py-4 mt-2">
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center">
-            ページ <span className="font-medium mx-1">{pageIndex + 1}</span> /{" "}
+            Trang <span className="font-medium mx-1">{pageIndex + 1}</span> /{" "}
             <span className="font-medium mx-1">
               {Math.max(1, Math.ceil(totalPlans / pageSize))}
             </span>
@@ -347,7 +347,7 @@ export function DataTable<TData, TValue>({
             className="h-8 px-3 text-sm"
           >
             <ChevronLeft className="size-4" />
-            前へ
+            Trước
           </Button>
           <Button
             type="button"
@@ -370,7 +370,7 @@ export function DataTable<TData, TValue>({
             }
             className="h-8 px-3 text-sm"
           >
-            次へ
+            Tiếp
             <ChevronRight className="size-4" />
           </Button>
         </div>

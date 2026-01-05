@@ -52,7 +52,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  filterPlaceholder = "検索...",
+  filterPlaceholder = "Tìm kiếm...",
   addButtonText,
   onAddClick,
   onRowClick,
@@ -128,7 +128,7 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 className="flex h-9 items-center gap-1 px-3"
               >
-                <span className="text-xs font-medium">列の表示</span>
+                <span className="text-xs font-medium">Hiển thị cột</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -185,7 +185,7 @@ export function DataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    読み込み中...
+                    Đang tải...
                   </TableCell>
                 </TableRow>
               ) : table.getRowModel().rows?.length ? (
@@ -212,7 +212,7 @@ export function DataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    データがありません
+                    Không có dữ liệu
                   </TableCell>
                 </TableRow>
               )}
@@ -233,7 +233,7 @@ export function DataTable<TData, TValue>({
               className="h-8 px-3 text-sm"
             >
               <ChevronLeft className="size-4" />
-              前へ
+              Trước
             </Button>
             <Button
               type="button"
@@ -243,7 +243,7 @@ export function DataTable<TData, TValue>({
               disabled={!table.getCanNextPage()}
               className="h-8 px-3 text-sm"
             >
-              次へ
+              Tiếp
               <ChevronRight className="size-4" />
             </Button>
           </div>
