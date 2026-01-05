@@ -324,6 +324,114 @@ async function getBookingById(reservationId: string): Promise<BookingWithListing
   return booking;
 }
 
+/**
+ * ADMIN: Lấy danh sách reservation (có phân trang, lọc, tìm kiếm)
+ */
+async function adminListReservations({
+  pageIndex = 0,
+  pageSize = 20,
+  search = "",
+  status,
+  listingId,
+  userId,
+}: {
+  pageIndex?: number;
+  pageSize?: number;
+  search?: string;
+  status?: ReservationStatus;
+  listingId?: string;
+  userId?: string;
+}) {
+  const where: Prisma.ReservationWhereInput = {
+    ...(status ? { status } : {}),
+    ...(listingId ? { listingId } : {}),
+    ...(userId ? { userId } : {}),
+    ...(search
+      ? {
+          OR: [
+            { phone: { contains: search, mode: "insensitive" } },
+            { user: { name: { contains: search, mode: "insensitive" } } },
+            { listing: { name: { contains: search, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
+  };
+
+  const total = await prisma.reservation.count({ where });
+
+  const reservations = await prisma.reservation.findMany({
+    where,
+    orderBy: { startDate: "desc" },
+    skip: pageIndex * pageSize,
+    take: pageSize,
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      listing: { select: { id: true, name: true } },
+    },
+  });
+
+  return { reservations, total };
+}
+
+/**
+ * ADMIN: Lấy chi tiết reservation theo ID
+ */
+async function adminGetReservationById(reservationId: string) {
+  const reservation = await prisma.reservation.findUnique({
+    where: { id: reservationId },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      listing: {
+        select: {
+          id: true,
+          name: true,
+          roomType: { select: { name: true } },
+          province: { select: { name: true } },
+          ward: { select: { name: true } },
+        },
+      },
+    },
+  });
+  return reservation;
+}
+
+/**
+ * ADMIN: Cập nhật reservation (chỉ cho phép cập nhật status, specialRequests, phone)
+ */
+async function adminUpdateReservation(
+  reservationId: string,
+  data: {
+    status?: ReservationStatus;
+    specialRequests?: string | null;
+    phone?: string;
+  }
+) {
+  const updated = await prisma.reservation.update({
+    where: { id: reservationId },
+    data: {
+      ...(data.status ? { status: data.status } : {}),
+      ...(data.specialRequests !== undefined ? { specialRequests: data.specialRequests } : {}),
+      ...(data.phone !== undefined ? { phone: data.phone } : {}),
+    },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      listing: { select: { id: true, name: true } },
+    },
+  });
+  return updated;
+}
+
+/**
+ * ADMIN: Xoá reservation
+ */
+async function adminDeleteReservation(reservationId: string) {
+  const deleted = await prisma.reservation.delete({
+    where: { id: reservationId },
+    select: { id: true },
+  });
+  return deleted;
+}
+
 export {
   createReservation,
   cancelReservation,
@@ -332,4 +440,8 @@ export {
   updateExpiredReservations,
   getBookingsByUser,
   getBookingById,
+  adminListReservations,
+  adminGetReservationById,
+  adminUpdateReservation,
+  adminDeleteReservation,
 };

@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { createListing } from "@/app/_actions/listing";
 import CreateDialog from "../_component/create-dialog";
-import { ListingDataTable } from "./_components/plans-data-table";
+import { ListingDataTable } from "./_components/listing-data-table";
 
 const ListingPage = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

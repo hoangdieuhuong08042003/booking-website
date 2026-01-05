@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import EditListingForm from "../../_components/edit-plan-form";
+import EditListingForm from "../../_components/edit-listing-form";
 
 export default function EditPlanPage() {
   const { id } = useParams();
