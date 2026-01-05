@@ -3,6 +3,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 import ConfirmDeleteDialog from "../../_component/confirm-delete-dialog";
 import { DataTable } from "../../_component/data-table";
@@ -37,52 +38,66 @@ export default function BlogDataTable({
   const columns: ColumnDef<Blog>[] = [
     {
       accessorKey: "stt",
-      header: "STT",
+      header: () => <div className="text-center">STT</div>,
       cell: ({ row }) => <p className="text-center">{row.index + 1}</p>,
     },
     {
       accessorKey: "imageUrl",
-      header: "Ảnh",
+      header: () => <div className="text-center">Ảnh</div>,
       cell: ({ row }) =>
         row.original.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={row.original.imageUrl}
-            alt="blog"
-            className="w-16 h-10 object-cover rounded"
-          />
+          <div className="flex justify-center">
+            <Image
+              src={row.original.imageUrl}
+              alt="blog"
+              width={64}
+              height={40}
+              className="w-16 h-10 object-cover rounded"
+              style={{ objectFit: "cover" }}
+            />
+          </div>
         ) : (
-          <span className="text-gray-400 italic">Không có</span>
+          <span className="text-gray-400 italic flex justify-center">
+            Không có
+          </span>
         ),
     },
     {
       accessorKey: "title",
-      header: "Tiêu đề",
-      cell: ({ row }) => <p>{row.original.title}</p>,
+      header: () => <div className="text-center">Tiêu đề</div>,
+      cell: ({ row }) => <p className="text-center">{row.original.title}</p>,
     },
     {
       accessorKey: "author",
-      header: "Tác giả",
-      cell: ({ row }) => <p>{row.original.author ?? ""}</p>,
+      header: () => <div className="text-center">Tác giả</div>,
+      cell: ({ row }) => (
+        <p className="text-center">{row.original.author ?? ""}</p>
+      ),
     },
     {
       accessorKey: "publishedAt",
-      header: "Ngày đăng",
+      header: () => <div className="text-center">Ngày đăng</div>,
       cell: ({ row }) =>
-        row.original.publishedAt
-          ? row.original.publishedAt instanceof Date
-            ? row.original.publishedAt.toLocaleDateString()
-            : new Date(row.original.publishedAt).toLocaleDateString()
-          : "",
+        row.original.publishedAt ? (
+          <div className="text-center">
+            {row.original.publishedAt instanceof Date
+              ? row.original.publishedAt.toLocaleDateString()
+              : new Date(row.original.publishedAt).toLocaleDateString()}
+          </div>
+        ) : (
+          <div className="text-center"></div>
+        ),
     },
     {
       id: "actions",
-      header: "Hành động",
+      header: () => <div className="text-center">Hành động</div>,
       cell: ({ row }) => (
-        <ActionButtons
-          onEdit={() => router.push(`/admin/blogs/edit/${row.original.id}`)}
-          onDelete={() => setDeleteId(row.original.id)}
-        />
+        <div className="flex justify-center">
+          <ActionButtons
+            onEdit={() => router.push(`/admin/blogs/edit/${row.original.id}`)}
+            onDelete={() => setDeleteId(row.original.id)}
+          />
+        </div>
       ),
     },
   ];

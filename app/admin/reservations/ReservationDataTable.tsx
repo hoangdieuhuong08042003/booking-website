@@ -89,42 +89,52 @@ export function ReservationDataTable() {
   const columns = [
     {
       accessorKey: "id",
-      header: "STT",
+      header: () => <div className="text-center">STT</div>,
       cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => (
         <p className="text-center">{row.index + 1}</p>
       ),
     },
     {
       accessorKey: "listing.name",
-      header: "Listing",
-      cell: ({ row }: CellContext<ReservationWithRelations, unknown>) =>
-        row.original.listing?.name || "-",
+      header: () => <div className="text-center">Listing</div>,
+      cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => (
+        <p className="text-center">{row.original.listing?.name || "-"}</p>
+      ),
     },
     {
       accessorKey: "user.name",
-      header: "Khách",
-      cell: ({ row }: CellContext<ReservationWithRelations, unknown>) =>
-        row.original.user?.name || "-",
+      header: () => <div className="text-center">Khách</div>,
+      cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => (
+        <p className="text-center">{row.original.user?.name || "-"}</p>
+      ),
     },
     {
       accessorKey: "startDate",
-      header: "Bắt đầu",
+      header: () => <div className="text-center">Bắt đầu</div>,
       cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => {
         const value = row.original.startDate;
-        return value ? new Date(value).toLocaleDateString() : "-";
+        return (
+          <p className="text-center">
+            {value ? new Date(value).toLocaleDateString() : "-"}
+          </p>
+        );
       },
     },
     {
       accessorKey: "endDate",
-      header: "Kết thúc",
+      header: () => <div className="text-center">Kết thúc</div>,
       cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => {
         const value = row.original.endDate;
-        return value ? new Date(value).toLocaleDateString() : "-";
+        return (
+          <p className="text-center">
+            {value ? new Date(value).toLocaleDateString() : "-"}
+          </p>
+        );
       },
     },
     {
       accessorKey: "status",
-      header: "Trạng thái",
+      header: () => <div className="text-center">Trạng thái</div>,
       cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => {
         const status = row.original.status;
         let color = "gray";
@@ -132,29 +142,39 @@ export function ReservationDataTable() {
         else if (status === "CANCELLED") color = "red";
         else if (status === "BLOCKED") color = "orange";
         else if (status === "COMPLETED") color = "blue";
-        return <span style={{ color }}>{status}</span>;
+        return (
+          <span className="block text-center" style={{ color }}>
+            {status}
+          </span>
+        );
       },
     },
     {
       accessorKey: "totalPrice",
-      header: "Tổng tiền",
-      cell: ({ row }: CellContext<ReservationWithRelations, unknown>) =>
-        row.original.totalPrice?.toLocaleString("vi-VN") || "-",
+      header: () => <div className="text-center">Tổng tiền</div>,
+      cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => (
+        <p className="text-center">
+          {row.original.totalPrice?.toLocaleString("vi-VN") || "-"}
+        </p>
+      ),
     },
     {
       accessorKey: "phone",
-      header: "SĐT",
-      cell: ({ row }: CellContext<ReservationWithRelations, unknown>) =>
-        row.original.phone,
+      header: () => <div className="text-center">SĐT</div>,
+      cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => (
+        <p className="text-center">{row.original.phone}</p>
+      ),
     },
     {
       id: "actions",
-      header: "Thao tác",
+      header: () => <div className="text-center">Thao tác</div>,
       cell: ({ row }: CellContext<ReservationWithRelations, unknown>) => (
-        <ActionButtons
-          onEdit={() => handleEdit(row.original.id)}
-          onDelete={() => handleDelete(row.original.id)}
-        />
+        <div className="flex justify-center">
+          <ActionButtons
+            onEdit={() => handleEdit(row.original.id)}
+            onDelete={() => handleDelete(row.original.id)}
+          />
+        </div>
       ),
     },
   ];
