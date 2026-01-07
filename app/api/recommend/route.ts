@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FLASK_API =  process.env.FLASK_API_URL!;
+const FLASK_API = "https://booking-website-suggest.onrender.com/recommend_w2v";
 
 export async function POST(req: NextRequest) {
   try {
