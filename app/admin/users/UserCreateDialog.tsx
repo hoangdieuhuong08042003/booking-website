@@ -25,7 +25,7 @@ const userSchema = z.object({
   name: z.string().min(1, "Tên là bắt buộc"),
   email: z.string().email("Email không hợp lệ"),
   password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
-  role: z.enum(["USER", "ADMIN"]),
+  role: z.enum(["user", "admin"]),
 });
 
 export type UserCreateFormValues = z.infer<typeof userSchema>;
@@ -48,7 +48,7 @@ export default function UserCreateDialog({
       name: "",
       email: "",
       password: "",
-      role: "USER",
+      role: "user",
     },
   });
 
@@ -125,8 +125,8 @@ export default function UserCreateDialog({
                       disabled={isSubmitting}
                       className="border px-2 py-1 rounded w-full"
                     >
-                      <option value="USER">user</option>
-                      <option value="ADMIN">admin</option>
+                      <option value="user">user</option>
+                      <option value="admin">admin</option>
                     </select>
                   </FormControl>
                   <FormMessage />
