@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { MapPin, Navigation, Coffee, Camera, Moon } from "lucide-react";
 import type { ComponentType } from "react";
-import { TimeSlot, ItineraryPlan, Weather } from "../types";
+import { TimeSlot, ItineraryDayResult, Weather } from "../types";
 
 // Type guard cho Weather object
 function isWeather(obj: unknown): obj is Weather {
@@ -47,10 +47,7 @@ export default function DayCard({
   imgFallback,
   setImgFallback,
 }: {
-  dayData: ItineraryPlan & {
-    date?: string;
-    weather_forecast?: string | Weather;
-  };
+  dayData: ItineraryDayResult;
   dayIndex: number;
   imgFallback: Record<string, boolean>;
   setImgFallback: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
@@ -67,13 +64,15 @@ export default function DayCard({
     tối: Moon,
   };
 
-  const dayLabel = dayData.date;
-  const weatherInfo = dayData.weather_forecast;
+  // Lấy ngày và thông tin thời tiết từ đúng trường trả về của API
+  const dayLabel = dayData?.date ?? "";
+  const weatherInfo = dayData?.weather_forecast;
 
   // Hàm render card cho từng slot
   function renderSlot(slot: TimeSlot | "tối_ăn_uống" | "tối", label?: string) {
-    const location = dayData[slot];
-    if (!location) return null;
+    // Lấy location từ dayData.plan (đúng chuẩn API trả về)
+    const location = dayData?.plan?.[slot];
+    if (!location || !location.name) return null;
     const key = `${dayIndex}-${slot}-${location.name ?? ""}`;
     const Icon = timeIcons[slot];
     return (
@@ -185,7 +184,6 @@ export default function DayCard({
             </span>
           </h3>
           <div className="flex items-center gap-4 text-sm">
-            {/* Không cần lặp lại ngày thực tế ở đây nữa */}
             {weatherInfo && (
               <span className="px-4 py-2 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full text-foreground font-medium border border-blue-500/20 shadow-sm flex items-center gap-2">
                 {renderWeather(weatherInfo)}

@@ -2,30 +2,35 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TRIP_THEME_OPTIONS, TRAVEL_STYLE_OPTIONS } from "@/constants/keywords";
 import {
-  PRIMARY_OPTIONS,
-  ATTRIBUTE_OPTIONS,
-  ACTIVITY_OPTIONS,
-} from "@/constants/keywords";
-import { Sparkles } from "lucide-react";
+  Sparkles,
+  CloudRain,
+  Sun,
+  HelpCircle,
+  Map,
+  MapPin,
+} from "lucide-react";
 import InputCard from "./components/InputCard";
 import KeywordGroup from "./components/KeywordGroup";
 import ItineraryHeader from "./components/ItineraryHeader";
 import DayCard from "./components/DayCard";
-import RecommendCard from "./components/RecommendCard";
+import RecommendCard, { type RecommendPlace } from "./components/RecommendCard";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import { useTourismApi } from "@/app/hooks/useItinerary";
+import { WeatherForecast } from "./types";
 
 export default function ItineraryPage() {
   const [province, setProvince] = useState("Huế");
   const [days, setDays] = useState<string[]>([]);
-  // New state for option selections
-  const [primary, setPrimary] = useState<number | null>(0); // index of PRIMARY_OPTIONS
-  const [attributes, setAttributes] = useState<number[]>([]); // indices of ATTRIBUTE_OPTIONS
-  const [activities, setActivities] = useState<number[]>([]); // indices of ACTIVITY_OPTIONS
+  const [primary, setPrimary] = useState<number | null>(0);
+  const [attributes, setAttributes] = useState<number[]>([]);
   const [imgFallback, setImgFallback] = useState<Record<string, boolean>>({});
+  // Tab state: "itinerary" | "recommend"
+  const [activeTab, setActiveTab] = useState<"itinerary" | "recommend">(
+    "itinerary"
+  );
 
-  // const { itinerary, loading, fetchItinerary } = useItinerary();
   const {
     itinerary,
     itineraryLoading,
@@ -35,12 +40,28 @@ export default function ItineraryPage() {
     recommendations,
   } = useTourismApi();
 
-  // Map selected options to keywords
   const selectedKeywords = [
-    ...(primary !== null ? PRIMARY_OPTIONS[primary].map : []),
-    ...attributes.flatMap((idx) => ATTRIBUTE_OPTIONS[idx].map),
-    ...activities.flatMap((idx) => ACTIVITY_OPTIONS[idx].map),
+    ...(primary !== null ? TRIP_THEME_OPTIONS[primary].map : []),
+    ...attributes.flatMap((idx) => TRAVEL_STYLE_OPTIONS[idx].map),
   ];
+
+  // Chuẩn bị dữ liệu gợi ý địa điểm
+  let recommendPlaces: RecommendPlace[] = [];
+  if (recommendations) {
+    if (
+      Array.isArray(recommendations.results) &&
+      recommendations.results.length > 0
+    ) {
+      recommendPlaces = recommendations.results;
+    } else if (
+      recommendations.results_by_intent &&
+      typeof recommendations.results_by_intent === "object"
+    ) {
+      recommendPlaces = Object.values(recommendations.results_by_intent)
+        .flat()
+        .filter(Boolean) as RecommendPlace[];
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,7 +108,6 @@ export default function ItineraryPage() {
               setProvince={setProvince}
               days={days}
               setDays={setDays}
-              // Pass mapped keywords to InputCard
               keywords={selectedKeywords}
               loading={itineraryLoading}
               fetchItinerary={fetchItinerary}
@@ -98,18 +118,16 @@ export default function ItineraryPage() {
 
           {/* Keywords Section */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Step 1: PRIMARY */}
             <KeywordGroup
               title="I. Bạn muốn đi đâu?"
-              items={PRIMARY_OPTIONS.map((opt) => opt.label)}
+              items={TRIP_THEME_OPTIONS.map((opt) => opt.label)}
               selected={primary !== null ? [primary] : []}
               toggle={(idx: number) => setPrimary(idx === primary ? null : idx)}
               delay={0.3}
             />
-            {/* Step 2: ATTRIBUTES */}
             <KeywordGroup
               title="II. Cảm giác mong muốn"
-              items={ATTRIBUTE_OPTIONS.map((opt) => opt.label)}
+              items={TRAVEL_STYLE_OPTIONS.map((opt) => opt.label)}
               selected={attributes}
               toggle={(idx: number) => {
                 setAttributes((prev) =>
@@ -122,111 +140,171 @@ export default function ItineraryPage() {
               }}
               delay={0.4}
             />
-            {/* Step 3: ACTIVITIES */}
-            <KeywordGroup
-              title="III. Muốn làm gì?"
-              items={ACTIVITY_OPTIONS.map((opt) => opt.label)}
-              selected={activities}
-              toggle={(idx: number) => {
-                setActivities((prev) =>
-                  prev.includes(idx)
-                    ? prev.filter((i) => i !== idx)
-                    : [...prev, idx]
-                );
-              }}
-              delay={0.5}
-            />
           </div>
         </div>
 
-        {/* Result Section */}
-        <AnimatePresence mode="wait">
-          {itinerary && itinerary.daily_results?.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -40 }}
-              transition={{ duration: 0.5 }}
-              className="mt-12"
+        {/* Tabs Section */}
+        <div className="mt-10 flex justify-center">
+          <div className="inline-flex rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+            <button
+              className={`flex items-center gap-2 px-6 py-3 font-semibold transition-colors ${
+                activeTab === "itinerary"
+                  ? "bg-primary text-white shadow"
+                  : "text-foreground hover:bg-accent/30"
+              }`}
+              onClick={() => setActiveTab("itinerary")}
             >
-              <div className="space-y-6">
-                {/* Header Card */}
-                <ItineraryHeader itinerary={itinerary} />
-                {/* Day Cards */}
-                <div className="space-y-6">
-                  {itinerary.daily_results?.map(
-                    (dayResult, dayIndex: number) => (
-                      <DayCard
-                        key={dayIndex}
-                        dayData={{
-                          ...dayResult.plan,
-                          date: dayResult.date,
-                          weather_forecast: dayResult.weather_forecast,
-                        }}
-                        dayIndex={dayIndex}
-                        imgFallback={imgFallback}
-                        setImgFallback={setImgFallback}
-                      />
-                    )
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ) : itinerary &&
-            (!itinerary.daily_results ||
-              itinerary.daily_results.length === 0) ? (
-            <div className="mt-12 text-center text-destructive text-lg font-medium">
-              Không tìm thấy lịch trình phù hợp với lựa chọn của bạn. Vui lòng
-              thử lại với từ khóa hoặc tỉnh/thành khác.
-            </div>
-          ) : null}
-        </AnimatePresence>
-        {/* Recommend Section */}
-        {recommendations && recommendations.results?.length > 0 ? (
-          <div className="mt-12 space-y-6">
-            <h2 className="text-2xl font-bold text-foreground">
-              Gợi ý địa điểm nổi bật
-            </h2>
-            {/* Weather summary */}
-            {recommendations.weather_forecast && (
-              <div className="mb-2 text-base text-muted-foreground">
-                <span className="font-medium">Thời tiết:</span>{" "}
-                {Array.isArray(recommendations.weather_forecast)
-                  ? recommendations.weather_forecast.join(" | ")
-                  : recommendations.weather_forecast}
-              </div>
+              <Map className="w-5 h-5" />
+              Lịch trình
+            </button>
+            <button
+              className={`flex items-center gap-2 px-6 py-3 font-semibold transition-colors ${
+                activeTab === "recommend"
+                  ? "bg-primary text-white shadow"
+                  : "text-foreground hover:bg-accent/30"
+              }`}
+              onClick={() => setActiveTab("recommend")}
+            >
+              <MapPin className="w-5 h-5" />
+              Gợi ý địa điểm
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="mt-8">
+          <AnimatePresence mode="wait">
+            {activeTab === "itinerary" && (
+              <motion.div
+                key="itinerary"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -40 }}
+                transition={{ duration: 0.5 }}
+              >
+                {itinerary && itinerary.daily_results?.length > 0 ? (
+                  <div className="space-y-6">
+                    <ItineraryHeader itinerary={itinerary} />
+                    <div className="space-y-6">
+                      {itinerary.daily_results?.map(
+                        (dayResult, dayIndex: number) => (
+                          <DayCard
+                            key={dayIndex}
+                            dayData={dayResult}
+                            dayIndex={dayIndex}
+                            imgFallback={imgFallback}
+                            setImgFallback={setImgFallback}
+                          />
+                        )
+                      )}
+                    </div>
+                  </div>
+                ) : itinerary &&
+                  (!itinerary.daily_results ||
+                    itinerary.daily_results.length === 0) ? (
+                  <div className="text-center text-destructive text-lg font-medium">
+                    Không tìm thấy lịch trình phù hợp với lựa chọn của bạn. Vui
+                    lòng thử lại với từ khóa hoặc tỉnh/thành khác.
+                  </div>
+                ) : null}
+              </motion.div>
             )}
-            <div className="flex flex-col gap-6">
-              {recommendations.results.map((place, idx) => (
-                <RecommendCard
-                  key={place.name + idx}
-                  place={{
-                    name: place.name,
-                    province: place.province,
-                    description: place.description,
-                    rating: place.rating,
-                    image: place.image,
-                  }}
-                  imgFallback={imgFallback}
-                  setImgFallback={setImgFallback}
-                  weatherSummary={
-                    idx === 0
-                      ? Array.isArray(recommendations.weather_forecast)
-                        ? recommendations.weather_forecast.join(" | ")
-                        : recommendations.weather_forecast
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
-          </div>
-        ) : recommendations &&
-          (!recommendations.results || recommendations.results.length === 0) ? (
-          <div className="mt-12 text-center text-destructive text-lg font-medium">
-            Không tìm thấy địa điểm phù hợp với lựa chọn của bạn. Vui lòng thử
-            lại với từ khóa hoặc tỉnh/thành khác.
-          </div>
-        ) : null}
+
+            {activeTab === "recommend" && (
+              <motion.div
+                key="recommend"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -40 }}
+                transition={{ duration: 0.5 }}
+              >
+                {recommendPlaces.length > 0 ? (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">
+                      Gợi ý địa điểm nổi bật
+                    </h2>
+                    {/* Weather summary */}
+                    {recommendations.weather_forecast && (
+                      <div className="mb-4">
+                        <div className="flex flex-wrap gap-4">
+                          {Array.isArray(recommendations.weather_forecast) ? (
+                            recommendations.weather_forecast.map(
+                              (w: WeatherForecast, idx: number) =>
+                                typeof w === "object" && w !== null ? (
+                                  <div
+                                    key={idx}
+                                    className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex flex-col min-w-[220px] max-w-xs"
+                                  >
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-semibold text-primary">
+                                        {w.date}
+                                      </span>
+                                      {w.status === "rain" ? (
+                                        <CloudRain
+                                          size={20}
+                                          className="text-blue-500"
+                                        />
+                                      ) : w.status === "clear" ? (
+                                        <Sun
+                                          size={20}
+                                          className="text-yellow-500"
+                                        />
+                                      ) : (
+                                        <HelpCircle
+                                          size={20}
+                                          className="text-gray-400"
+                                        />
+                                      )}
+                                      <span className="capitalize font-medium">
+                                        {w.status === "rain"
+                                          ? "Có mưa"
+                                          : w.status === "clear"
+                                          ? "Đẹp"
+                                          : w.status}
+                                      </span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {w.message}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
+                                    key={idx}
+                                    className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm min-w-[220px] max-w-xs"
+                                  >
+                                    {JSON.stringify(w)}
+                                  </div>
+                                )
+                            )
+                          ) : (
+                            <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm min-w-[220px] max-w-xs">
+                              {recommendations.weather_forecast}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-6">
+                      {recommendPlaces.map((place, idx) => (
+                        <RecommendCard
+                          key={(place.name ?? "") + idx}
+                          place={place}
+                          imgFallback={imgFallback}
+                          setImgFallback={setImgFallback}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : recommendations ? (
+                  <div className="text-center text-destructive text-lg font-medium">
+                    Không tìm thấy địa điểm phù hợp với lựa chọn của bạn. Vui
+                    lòng thử lại với từ khóa hoặc tỉnh/thành khác.
+                  </div>
+                ) : null}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

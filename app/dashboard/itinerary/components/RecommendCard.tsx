@@ -3,35 +3,36 @@
 import Image from "next/image";
 import { MapPin } from "lucide-react";
 
+// Hỗ trợ cả hai kiểu dữ liệu trả về từ API
 export interface RecommendPlace {
   name?: string;
   province?: string;
   description?: string;
   rating?: number;
   image?: string;
+  hoạt_động?: string; // có thể có hoặc không
 }
 
 export default function RecommendCard({
   place,
   imgFallback,
   setImgFallback,
-  weatherSummary,
 }: {
   place: RecommendPlace;
   imgFallback: Record<string, boolean>;
   setImgFallback: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  weatherSummary?: string;
 }) {
-  // Normalize fields for compatibility with both API field sets
+  // Chuẩn hóa dữ liệu cho cả hai kiểu trả về
   const normalizedPlace = {
     tên: place.name ?? "",
-    tỉnh: place.province,
+    tỉnh: place.province ?? "",
     mô_tả: place.description ?? "",
     đánh_giá: place.rating,
     hình_ảnh: place.image ?? "",
-    hoạt_động: place["hoạt_động"],
+    hoạt_động: place["hoạt_động"] ?? "",
   };
-  const key = `${normalizedPlace.tên}-${normalizedPlace.tỉnh ?? ""}`;
+  const key = `${normalizedPlace.tên}-${normalizedPlace.tỉnh}`;
+
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-lg">
       {/* Header */}
@@ -57,11 +58,6 @@ export default function RecommendCard({
             )}
           </div>
         </div>
-        {weatherSummary && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            <span className="font-medium">Thời tiết:</span> {weatherSummary}
-          </p>
-        )}
       </div>
       {/* Content */}
       <div className="p-6 flex gap-4">

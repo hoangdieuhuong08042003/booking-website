@@ -44,18 +44,18 @@ export default function InputCard({
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
 
-  // Hàm lấy ngày tối đa cho endDate (tối đa 3 ngày kể từ startDate)
+  // Hàm lấy ngày tối đa cho endDate (tối đa 5 ngày kể từ startDate)
   const getMaxEndDate = () => {
     if (!startDate) return undefined;
     const start = new Date(startDate);
     const maxEnd = new Date(start);
-    maxEnd.setDate(start.getDate() + 2); // tối đa 3 ngày (start + 2)
+    maxEnd.setDate(start.getDate() + 4); // tối đa 5 ngày (start + 4)
     // Không cho phép chọn ngày trước hôm nay
     if (maxEnd < today) return todayStr;
     return maxEnd.toISOString().split("T")[0];
   };
 
-  // Khi chọn ngày bắt đầu/kết thúc, cập nhật mảng days (tối đa 3 ngày)
+  // Khi chọn ngày bắt đầu/kết thúc, cập nhật mảng days (tối đa 5 ngày)
   const handleDateChange = (type: "start" | "end", value: string) => {
     if (type === "start") setStartDate(value);
     else setEndDate(value);
@@ -63,13 +63,13 @@ export default function InputCard({
     const s = type === "start" ? value : startDate;
     const e = type === "end" ? value : endDate;
     if (s && e && s <= e) {
-      // Tạo mảng ngày từ s đến e, tối đa 3 ngày
+      // Tạo mảng ngày từ s đến e, tối đa 5 ngày
       const start = new Date(s);
       const end = new Date(e);
       const diff = Math.min(
         Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
           1,
-        3
+        5
       );
       const daysArr: string[] = [];
       for (let i = 0; i < diff; i++) {

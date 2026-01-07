@@ -42,18 +42,27 @@ interface ItineraryResponse {
 }
 
 interface RecommendPlace {
-  name: string;
-  province: string;
-  description: string;
-  image: string;
-  rating: number;
-  "hoạt_động": string; // "ngoài trời" | "trong nhà"
+  name?: string;
+  province?: string;
+  description?: string;
+  image?: string;
+  rating?: number;
+  "hoạt_động"?: string;
+}
+
+interface WeatherForecast {
+  date: string;
+  status: string;
+  message: string;
 }
 
 interface RecommendResponse {
-  weather_forecast: string[];
-  results: RecommendPlace[];
-  message: string;
+  weather_forecast?: WeatherForecast[] | string;
+  results?: RecommendPlace[];
+  results_by_intent?: {
+    [intent: string]: RecommendPlace[];
+  };
+  message?: string;
 }
 
 export function useTourismApi() {

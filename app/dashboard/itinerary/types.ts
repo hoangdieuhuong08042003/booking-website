@@ -15,7 +15,11 @@ export interface Location {
   
 }
 
-
+export interface WeatherForecast {
+  date: string;
+  status: string;
+  message: string;
+}
 
 export interface Itinerary {
   tỉnh_thành?: string;
@@ -23,6 +27,7 @@ export interface Itinerary {
   từ_khóa?: string[];
   daily_results?: ItineraryDayResult[];
   message?: string;
+  weather_forecast?: WeatherForecast[] | string;
 }
 
 // Type cho từng ngày trong lịch trình

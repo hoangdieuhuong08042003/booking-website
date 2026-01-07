@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     "source.unsplash.com",
     "lh3.googleusercontent.com",
     "images.pexels.com",
-
+'static.vinwonders.com',
     "i.pinimg.com",  
   ],
 },
