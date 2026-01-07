@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FLASK_API = "http://127.0.0.1:5000/recommend_w2v";
+const FLASK_API =  process.env.FLASK_API_URL!;
 
 export async function POST(req: NextRequest) {
   try {
