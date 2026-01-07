@@ -26,11 +26,6 @@ const userEditSchema = z.object({
   name: z.string().min(1, "Tên là bắt buộc"),
   email: z.string().email("Email không hợp lệ"),
   role: z.enum(["user", "admin"]),
-  password: z
-    .string()
-    .min(6, "Mật khẩu tối thiểu 6 ký tự")
-    .optional()
-    .or(z.literal("")),
 });
 
 export type UserEditFormValues = z.infer<typeof userEditSchema>;
@@ -56,7 +51,6 @@ export default function UserEditDialog({
       name: user?.name || "",
       email: user?.email || "",
       role: user?.role?.toLowerCase() === "admin" ? "admin" : "user",
-      password: "",
     },
   });
 
@@ -66,7 +60,6 @@ export default function UserEditDialog({
       name: user?.name || "",
       email: user?.email || "",
       role: user?.role?.toLowerCase() === "admin" ? "admin" : "user",
-      password: "",
     });
   }, [user, form]);
 
@@ -132,25 +125,6 @@ export default function UserEditDialog({
                       <option value="user">user</option>
                       <option value="admin">admin</option>
                     </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mật khẩu mới (bỏ trống nếu không đổi)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      {...field}
-                      disabled={isSubmitting}
-                      autoComplete="new-password"
-                      placeholder="Nhập mật khẩu mới nếu muốn đổi"
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
