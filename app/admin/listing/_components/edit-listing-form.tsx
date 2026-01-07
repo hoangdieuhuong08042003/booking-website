@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Camera, X, Loader2, ArrowLeft, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
-import {
-  uploadImageToCloudinary,
-  deleteImageFromCloudinary,
-} from "@/lib/image-upload-handler";
+import // uploadImageToCloudinary,
+// deleteImageFromCloudinary,
+"@/lib/image-upload-handler";
 import {
   getListingById,
   getImagesByListingId,
@@ -136,9 +135,17 @@ export function EditListingForm({ listingId }: { listingId: string }) {
     setUploading(true);
     try {
       if (thumbnail) {
-        await deleteImageFromCloudinary(thumbnail);
+        await deleteThumbnail();
       }
-      const imageUrl = await uploadImageToCloudinary(file);
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      const imageUrl = data.url;
       await updateListing(listingId, { thumbnail: imageUrl });
       setThumbnail(imageUrl);
       toast.success("Cập nhật ảnh đại diện thành công");
@@ -154,7 +161,13 @@ export function EditListingForm({ listingId }: { listingId: string }) {
     if (!thumbnail) return;
     setUploading(true);
     try {
-      await deleteImageFromCloudinary(thumbnail);
+      const res = await fetch("/api/delete-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: thumbnail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Delete failed");
       await updateListing(listingId, { thumbnail: "" });
       setThumbnail(null);
       toast.success("Đã xoá thumbnail");
@@ -171,10 +184,17 @@ export function EditListingForm({ listingId }: { listingId: string }) {
     setUploading(true);
     try {
       const fileArr = Array.from(files);
-
       const uploads = await Promise.all(
         fileArr.map(async (file) => {
-          const imageUrl = await uploadImageToCloudinary(file);
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch("/api/upload-image", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Upload failed");
+          const imageUrl = data.url;
           const img = await createListingImage({
             listingId,
             imageUrl,
@@ -182,7 +202,6 @@ export function EditListingForm({ listingId }: { listingId: string }) {
           return img;
         })
       );
-
       setListingImages((prev) => [...prev, ...uploads]);
       toast.success(`Đã tải ${uploads.length} ảnh`);
     } catch (err) {
@@ -196,7 +215,13 @@ export function EditListingForm({ listingId }: { listingId: string }) {
   const removeImage = async (img: ListingImage) => {
     setUploading(true);
     try {
-      await deleteImageFromCloudinary(img.imageUrl);
+      const res = await fetch("/api/delete-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: img.imageUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Delete failed");
       await deleteListingImage(img.id);
       setListingImages((prev) => prev.filter((i) => i.id !== img.id));
       toast.success("Đã xoá ảnh");

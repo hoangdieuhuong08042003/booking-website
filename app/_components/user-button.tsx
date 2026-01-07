@@ -63,7 +63,6 @@ export const UserButton = () => {
           />
         </DropdownMenuItem>
 
-        {/* Sửa đường dẫn và nhãn */}
         <Link href="/admin">
           <DropdownMenuItem>
             <Settings />

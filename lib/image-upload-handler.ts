@@ -9,7 +9,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const allowedFileTypes = ["image/jpg", "image/jpeg", "image/png"];
+
+// Chấp nhận tất cả các file là ảnh
+const allowedFileTypes = /^image\//;
 
 type SignedURLResponse = Promise<
   { failure?: undefined; url: string } | { failure: string; url?: undefined }
@@ -26,8 +28,9 @@ const generateImageFileName = (
 
 
 async function uploadFileToCloudinary(file: File): Promise<SignedURLResponse> {
-  // Kiểm tra định dạng file
-  if (!allowedFileTypes.includes(file.type)) {
+
+  // Kiểm tra định dạng file: chấp nhận mọi file có type bắt đầu bằng 'image/'
+  if (!allowedFileTypes.test(file.type)) {
     return { failure: "Định dạng file không được hỗ trợ" };
   }
 
@@ -103,10 +106,3 @@ export async function deleteImageFromCloudinary(imageUrl: string): Promise<void>
   }
 }
 
-// Xuất các hàm tương thích ngược (nếu cần)
-export {
-  uploadFileToCloudinary as uploadFileToS3,
-  deleteFileFromCloudinary as deleteFileFromS3,
-  uploadImageToCloudinary as uploadImageToAWS,
-  deleteImageFromCloudinary as deleteImageFromAWS,
-};

@@ -14,12 +14,12 @@ export default function ImageGallery({
   images,
   alt,
 }: ImageGalleryProps) {
-  // imagesFromList = images array without the thumbnail (deduped)
+  // Always show thumbnail as the first image (if exists), then all images (even if duplicate)
   const imagesFromList = useMemo(() => {
     const arr = (images ?? []).filter(Boolean);
-    // dedupe
-    return Array.from(new Set(arr));
-  }, [images]);
+    // Always show thumbnail first if exists
+    return thumbnail ? [thumbnail, ...arr] : arr;
+  }, [images, thumbnail]);
 
   // mainImage: always the first image in imagesFromList, otherwise placeholder
   const initialMain = imagesFromList[0] ?? "/placeholder.svg";
@@ -27,7 +27,7 @@ export default function ImageGallery({
 
   return (
     // Main container: flex on md+, stack on mobile
-    <div className="max-w-[98vw] mx-auto flex flex-col md:flex-row gap-4">
+    <div className="max-w-[98vw] mx-auto flex flex-col md:flex-row gap-4 p-8">
       {/* Main image (first image in images) */}
       <div
         className="relative w-full md:w-[700px] lg:w-[900px] rounded-xl overflow-hidden mb-2 md:mb-0 shadow-lg"
@@ -48,7 +48,7 @@ export default function ImageGallery({
             <button
               onClick={() => setMainImage(thumbnail)}
               aria-label="Thumbnail"
-              className={`relative w-[140px] h-[140px] md:w-full md:h-[170px] rounded-lg overflow-hidden transition-all ring-1 ring-border`}
+              className={`relative w-[140px] h-[140px] md:w-full md:h-[170px] `}
               style={{ aspectRatio: "1 / 1" }}
             >
               <Image
@@ -69,7 +69,7 @@ export default function ImageGallery({
               key={src + i}
               onClick={() => setMainImage(src)}
               aria-label={`Hiển thị ảnh ${i + 1}`}
-              className={`relative w-[120px] h-[120px] md:w-full md:h-[170px] rounded-lg overflow-hidden transition-all focus:outline-none ${
+              className={`relative w-[120px] h-[120px] md:w-full md:h-[170px]  overflow-hidden transition-all focus:outline-none ${
                 mainImage === src
                   ? "ring-2 ring-primary"
                   : "ring-1 ring-transparent hover:ring-border"

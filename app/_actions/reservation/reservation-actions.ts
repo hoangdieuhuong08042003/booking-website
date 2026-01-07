@@ -456,8 +456,7 @@ async function getReservationCountByMonth(year?: number) {
     counts[month]++;
   });
 
-  return counts.map((count, idx) => ({
-    month: idx + 1,
+  return counts.map((count) => ({
     count,
   }));
 }

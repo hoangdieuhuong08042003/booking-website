@@ -28,8 +28,14 @@ export default async function HotelDetailPage({
     );
   }
 
-  const imageSrc =
-    listing.thumbnail ?? listing.imageUrls?.[0] ?? "/placeholder.svg";
+  // Use all images from ListingImage table (listing.images), fallback to imageUrls
+  const galleryImages =
+    Array.isArray(listing.images) && listing.images.length > 0
+      ? listing.images
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((img) => img.imageUrl)
+      : listing.imageUrls ?? [];
+  const imageSrc = listing.thumbnail ?? galleryImages[0] ?? "/placeholder.svg";
   const location =
     listing.province?.name && listing.ward?.name
       ? `${listing.ward.name}, ${listing.province.name}`
@@ -58,7 +64,7 @@ export default async function HotelDetailPage({
           <div className="w-full flex justify-center rounded-2xl overflow-hidden shadow-lg bg-white">
             <ImageGallery
               thumbnail={imageSrc}
-              images={listing.imageUrls ?? []}
+              images={galleryImages}
               alt={listing.name}
             />
           </div>
@@ -140,7 +146,7 @@ export default async function HotelDetailPage({
                     <Tag className="w-5 h-5 text-purple-500" />
                     <span className="text-sm text-muted-foreground">Loại:</span>
                     <span className="font-semibold text-base text-foreground">
-                      {listing.type}
+                      {listing.roomType?.name}
                     </span>
                   </div>
                 </div>
