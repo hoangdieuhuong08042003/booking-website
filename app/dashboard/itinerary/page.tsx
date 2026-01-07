@@ -41,8 +41,8 @@ export default function ItineraryPage() {
   } = useTourismApi();
 
   const selectedKeywords = [
-    ...(primary !== null ? TRIP_THEME_OPTIONS[primary].map : []),
-    ...attributes.flatMap((idx) => TRAVEL_STYLE_OPTIONS[idx].map),
+    ...(primary !== null ? [TRIP_THEME_OPTIONS[primary].label] : []),
+    ...attributes.map((idx) => TRAVEL_STYLE_OPTIONS[idx].label),
   ];
 
   // Chuẩn bị dữ liệu gợi ý địa điểm

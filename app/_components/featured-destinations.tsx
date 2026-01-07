@@ -1,5 +1,6 @@
+"use client";
+
 import { Blog } from "@prisma/client";
-import { getBlogs } from "../_actions/blog/blog-actions"; // import the action
 import { Calendar } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -12,7 +13,9 @@ export function FeaturedDestinations() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await getBlogs();
+        const res = await fetch("/api/blogs");
+        if (!res.ok) throw new Error("Không thể tải blog");
+        const data = await res.json();
         setBlogs(data.slice(0, 6));
       } catch (err: unknown) {
         let message = "Lỗi không xác định";
