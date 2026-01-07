@@ -43,7 +43,6 @@ export async function POST(req: Request) {
         startDate,
         endDate,
         listingId,
-        pricePerNight,
         daysDifference,
         useId: userId,
         phone,

@@ -12,7 +12,11 @@ export async function POST(req: NextRequest) {
   try {
     const url = await uploadImageToCloudinary(file);
     return NextResponse.json({ url });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || "Upload failed" }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMessage =
+      typeof err === "object" && err !== null && "message" in err
+        ? (err as { message?: string }).message || "Upload failed"
+        : "Upload failed";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
