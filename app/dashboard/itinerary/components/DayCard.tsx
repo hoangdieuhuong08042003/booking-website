@@ -194,8 +194,8 @@ export default function DayCard({
       {/* Time Slots */}
       <div className="p-6 space-y-6">
         {timeSlots.map((slot) => renderSlot(slot))}
-        {renderSlot("tối_ăn_uống", "Tối: Ăn uống / Nhà hàng")}
-        {renderSlot("tối", "Tối: Cafe / Chụp ảnh / Vui chơi")}
+        {renderSlot("tối_ăn_uống", "Tối: Thưởng thức ẩm thực")}
+        {renderSlot("tối", "Tối: Hoạt động vui chơi")}
       </div>
     </motion.div>
   );
