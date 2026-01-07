@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { DashboardHeader } from "../_components/dashboard-header";
 import { getNewestListings } from "../_actions/listing/listing-actions";
 import DashboardClient from "./DashboardClient";
