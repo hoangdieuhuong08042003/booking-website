@@ -1,13 +1,36 @@
+"use client";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { getBlogs } from "@/app/_actions/blog/blog-actions";
+import { getBlogsPaginated } from "@/app/_actions/blog/blog-actions";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import Image from "next/image";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
+import { Blog } from "@prisma/client";
 
-export default async function BlogListPage() {
-  const blogs = await getBlogs();
+const PAGE_SIZE = 9;
+
+export default function BlogListPage() {
+  const [pageIndex, setPageIndex] = useState(0);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [total, setTotal] = useState(0);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  useEffect(() => {
+    getBlogsPaginated({ pageIndex, pageSize: PAGE_SIZE }).then((res) => {
+      setBlogs(res.blogs);
+      setTotal(res.total);
+    });
+  }, [pageIndex]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background max-w-7xl mx-auto">
       <DashboardHeader />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-extrabold mb-10 text-primary tracking-tight text-center">
@@ -66,6 +89,48 @@ export default async function BlogListPage() {
               </div>
             </Link>
           ))}
+        </div>
+        <div className="flex justify-center mt-10">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPageIndex((prev) => Math.max(prev - 1, 0));
+                  }}
+                  aria-disabled={pageIndex === 0 || totalPages <= 1}
+                />
+              </PaginationItem>
+              {Array.from({ length: Math.max(totalPages, 1) }).map((_, idx) => (
+                <PaginationItem key={idx}>
+                  <PaginationLink
+                    href="#"
+                    isActive={idx === pageIndex}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPageIndex(idx);
+                    }}
+                  >
+                    {idx + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPageIndex((prev) => Math.min(prev + 1, totalPages - 1));
+                  }}
+                  aria-disabled={
+                    pageIndex === totalPages - 1 || totalPages <= 1
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </div>
     </div>

@@ -114,3 +114,35 @@ export async function deleteBlog(id: string): Promise<Pick<Blog, "id">> {
     select: { id: true },
   }) as unknown as Pick<Blog, "id">;
 }
+
+// Phân trang blog (không lọc)
+export async function getBlogsPaginated({
+  pageIndex = 0,
+  pageSize = 10,
+}: {
+  pageIndex?: number;
+  pageSize?: number;
+}) {
+  const total = await prisma.blog.count();
+
+  const blogs = await prisma.blog.findMany({
+    orderBy: [
+      { publishedAt: "desc" },
+      { id: "desc" }
+    ],
+    skip: pageIndex * pageSize,
+    take: pageSize,
+    select: {
+      id: true,
+      title: true,
+      excerpt: true,
+      content: true,
+      imageUrl: true,
+      author: true,
+      publishedAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return { blogs, total };
+}
