@@ -62,27 +62,25 @@ export default function RecommendCard({
       {/* Content */}
       <div className="p-6 flex gap-4">
         {/* Image */}
-        {normalizedPlace.hình_ảnh && (
-          <div className="flex-shrink-0 w-32 h-32 rounded-lg overflow-hidden bg-muted relative">
-            <Image
-              src={
-                imgFallback[key]
-                  ? "/placeholder.svg?height=128&width=128"
-                  : normalizedPlace.hình_ảnh
-              }
-              alt={normalizedPlace.tên}
-              fill
-              sizes="128px"
-              className="object-cover"
-              onError={() =>
-                setImgFallback((prev) => ({
-                  ...prev,
-                  [key]: true,
-                }))
-              }
-            />
-          </div>
-        )}
+        <div className="flex-shrink-0 w-32 h-32 rounded-lg overflow-hidden bg-muted relative">
+          <Image
+            src={
+              !normalizedPlace.hình_ảnh || imgFallback[key]
+                ? "/default.jpg"
+                : normalizedPlace.hình_ảnh
+            }
+            alt={normalizedPlace.tên}
+            fill
+            sizes="128px"
+            className="object-cover"
+            onError={() =>
+              setImgFallback((prev) => ({
+                ...prev,
+                [key]: true,
+              }))
+            }
+          />
+        </div>
         {/* Details */}
         <div className="flex-1 min-w-0 space-y-2">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

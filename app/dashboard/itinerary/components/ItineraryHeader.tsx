@@ -9,6 +9,12 @@ export default function ItineraryHeader({
 }: {
   itinerary: Itinerary;
 }) {
+  // Tính tổng số ngày dựa trên daily_results nếu có
+  const totalDays =
+    Array.isArray(itinerary.daily_results) && itinerary.daily_results.length > 0
+      ? itinerary.daily_results.length
+      : itinerary.số_ngày;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -23,14 +29,12 @@ export default function ItineraryHeader({
             Lịch trình {itinerary.tỉnh_thành}
           </h2>
           <p className="text-muted-foreground">
-            Hành trình {itinerary.số_ngày} ngày khám phá những điều tuyệt vời
+            Hành trình {totalDays} ngày khám phá những điều tuyệt vời
           </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
           <Calendar className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-primary">
-            {itinerary.số_ngày} ngày
-          </span>
+          <span className="font-semibold text-primary">{totalDays} ngày</span>
         </div>
       </div>
 

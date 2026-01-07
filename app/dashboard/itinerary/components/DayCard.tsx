@@ -101,27 +101,25 @@ export default function DayCard({
         <div className="flex bg-white rounded-xl transition-all duration-300 border border-border/50 overflow-hidden">
           {/* Location Image - Left Side */}
           <div className="relative flex-shrink-0 w-[420px] h-[320px] bg-muted flex items-center justify-center">
-            {location.image && (
-              <div className="w-full h-full relative">
-                <Image
-                  src={
-                    imgFallback[key]
-                      ? "/placeholder.svg?height=512&width=512"
-                      : location.image
-                  }
-                  alt={location.name}
-                  fill
-                  sizes="420px"
-                  className="object-cover rounded-none transition-transform duration-300"
-                  onError={() =>
-                    setImgFallback((prev) => ({
-                      ...prev,
-                      [key]: true,
-                    }))
-                  }
-                />
-              </div>
-            )}
+            <div className="w-full h-full relative">
+              <Image
+                src={
+                  !location.image || imgFallback[key]
+                    ? "/default.jpg"
+                    : location.image
+                }
+                alt={location.name}
+                fill
+                sizes="420px"
+                className="object-cover rounded-none transition-transform duration-300"
+                onError={() =>
+                  setImgFallback((prev) => ({
+                    ...prev,
+                    [key]: true,
+                  }))
+                }
+              />
+            </div>
           </div>
           {/* Location Details - Right Side */}
           <div className="flex flex-col justify-center min-w-0 space-y-2 px-8 py-6 flex-1">
