@@ -40,6 +40,9 @@ export default function InputCard({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
+  // Thông báo lỗi khi chưa chọn ngày hoặc tỉnh
+  const [dateError, setDateError] = useState<string>("");
+
   // Lấy ngày hôm nay theo định dạng yyyy-mm-dd
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
@@ -85,8 +88,10 @@ export default function InputCard({
         );
       }
       setDays(daysArr);
+      setDateError(""); // clear error khi đã chọn ngày hợp lệ
     } else {
       setDays([]);
+      setDateError(""); // clear error nếu chưa đủ điều kiện
     }
   };
 
@@ -112,6 +117,9 @@ export default function InputCard({
       : provinces.filter((p) =>
           p.name.toLowerCase().includes(provinceSearch.toLowerCase())
         );
+
+  // Kiểm tra đã chọn tỉnh/thành phố hợp lệ chưa
+  const isProvinceSelected = !!province && province.trim().length > 0;
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6 shadow-lg sticky top-6">
@@ -203,6 +211,9 @@ export default function InputCard({
           <div className="text-xs text-muted-foreground mt-1">
             Ngày đã chọn: {displayDays}
           </div>
+          {dateError && (
+            <div className="text-xs text-destructive mt-1">{dateError}</div>
+          )}
         </div>
 
         {keywords.length > 0 && (
@@ -233,14 +244,23 @@ export default function InputCard({
         )}
 
         <motion.button
-          disabled={loading}
-          onClick={() =>
+          disabled={loading || days.length === 0 || !isProvinceSelected}
+          onClick={() => {
+            if (!isProvinceSelected) {
+              setDateError("Vui lòng chọn tỉnh/thành phố!");
+              return;
+            }
+            if (days.length === 0) {
+              setDateError("Vui lòng chọn ngày bắt đầu và kết thúc!");
+              return;
+            }
+            setDateError("");
             fetchItinerary({
               province,
               days,
               keywords,
-            })
-          }
+            });
+          }}
           whileHover={{ scale: loading ? 1 : 1.02 }}
           whileTap={{ scale: loading ? 1 : 0.98 }}
           className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-3"
@@ -268,14 +288,25 @@ export default function InputCard({
         </motion.button>
         {/* Button chỉ trả về các địa điểm gợi ý */}
         <motion.button
-          disabled={recommendLoading}
-          onClick={() =>
+          disabled={
+            recommendLoading || days.length === 0 || !isProvinceSelected
+          }
+          onClick={() => {
+            if (!isProvinceSelected) {
+              setDateError("Vui lòng chọn tỉnh/thành phố!");
+              return;
+            }
+            if (days.length === 0) {
+              setDateError("Vui lòng chọn ngày bắt đầu và kết thúc!");
+              return;
+            }
+            setDateError("");
             fetchRecommendations({
               province,
               keywords,
               days,
-            })
-          }
+            });
+          }}
           whileHover={{ scale: recommendLoading ? 1 : 1.02 }}
           whileTap={{ scale: recommendLoading ? 1 : 0.98 }}
           className="w-full px-6 py-4 bg-accent text-primary border border-primary rounded-xl font-semibold shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
