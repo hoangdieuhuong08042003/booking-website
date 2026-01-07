@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import UserGrowthChart from "./_component/use-chart";
 import { getReservationCountByMonth } from "../_actions/reservation/reservation-actions";
 import { FaRegImage } from "react-icons/fa";
