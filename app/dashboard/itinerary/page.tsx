@@ -182,19 +182,29 @@ export default function ItineraryPage() {
                 exit={{ opacity: 0, y: -40 }}
                 transition={{ duration: 0.5 }}
               >
-                {itinerary && itinerary.daily_results?.length > 0 ? (
-                  <div className="space-y-6">
+                {itineraryLoading ? (
+                  <div className="flex justify-center items-center min-h-[200px]">
+                    <span className="text-primary font-semibold text-lg">
+                      Đang tải lịch trình...
+                    </span>
+                  </div>
+                ) : itinerary && itinerary.daily_results?.length > 0 ? (
+                  <div className="space-y-8">
                     <ItineraryHeader itinerary={itinerary} />
-                    <div className="space-y-6">
+                    <div className="grid gap-8 md:grid-rows-1-2 lg:grid-rows-2">
                       {itinerary.daily_results?.map(
                         (dayResult, dayIndex: number) => (
-                          <DayCard
+                          <div
                             key={dayIndex}
-                            dayData={dayResult}
-                            dayIndex={dayIndex}
-                            imgFallback={imgFallback}
-                            setImgFallback={setImgFallback}
-                          />
+                            className="rounded-2xl border border-border bg-card shadow-lg transition-all"
+                          >
+                            <DayCard
+                              dayData={dayResult}
+                              dayIndex={dayIndex}
+                              imgFallback={imgFallback}
+                              setImgFallback={setImgFallback}
+                            />
+                          </div>
                         )
                       )}
                     </div>
@@ -202,7 +212,7 @@ export default function ItineraryPage() {
                 ) : itinerary &&
                   (!itinerary.daily_results ||
                     itinerary.daily_results.length === 0) ? (
-                  <div className="text-center text-destructive text-lg font-medium">
+                  <div className="text-center text-destructive text-lg font-medium py-12 rounded-xl bg-card/60 shadow">
                     Không tìm thấy lịch trình phù hợp với lựa chọn của bạn. Vui
                     lòng thử lại với từ khóa hoặc tỉnh/thành khác.
                   </div>
@@ -218,22 +228,29 @@ export default function ItineraryPage() {
                 exit={{ opacity: 0, y: -40 }}
                 transition={{ duration: 0.5 }}
               >
-                {recommendPlaces.length > 0 ? (
-                  <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">
+                {recommendLoading ? (
+                  <div className="flex justify-center items-center min-h-[200px]">
+                    <span className="text-primary font-semibold text-lg">
+                      Đang tải gợi ý địa điểm...
+                    </span>
+                  </div>
+                ) : recommendPlaces.length > 0 ? (
+                  <div className="space-y-8">
+                    <h2 className="text-2xl font-bold text-foreground mb-2">
                       Gợi ý địa điểm nổi bật
                     </h2>
                     {/* Weather summary */}
                     {recommendations.weather_forecast && (
-                      <div className="mb-4">
+                      <div className="mb-6">
                         <div className="flex flex-wrap gap-4">
                           {Array.isArray(recommendations.weather_forecast) ? (
                             recommendations.weather_forecast.map(
                               (w: WeatherForecast, idx: number) =>
                                 typeof w === "object" && w !== null ? (
-                                  <div
+                                  <motion.div
                                     key={idx}
-                                    className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex flex-col min-w-[220px] max-w-xs"
+                                    whileHover={{ scale: 1.04 }}
+                                    className="rounded-xl border border-border bg-gradient-to-br from-primary/10 via-accent/5 to-background px-4 py-3 shadow-md flex flex-col min-w-[220px] max-w-xs transition-all"
                                   >
                                     <div className="flex items-center gap-2 mb-1">
                                       <span className="font-semibold text-primary">
@@ -266,7 +283,7 @@ export default function ItineraryPage() {
                                     <div className="text-sm text-muted-foreground">
                                       {w.message}
                                     </div>
-                                  </div>
+                                  </motion.div>
                                 ) : (
                                   <div
                                     key={idx}
@@ -284,7 +301,7 @@ export default function ItineraryPage() {
                         </div>
                       </div>
                     )}
-                    <div className="flex flex-col gap-6">
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2">
                       {recommendPlaces.map((place, idx) => (
                         <RecommendCard
                           key={(place.name ?? "") + idx}
@@ -296,7 +313,7 @@ export default function ItineraryPage() {
                     </div>
                   </div>
                 ) : recommendations ? (
-                  <div className="text-center text-destructive text-lg font-medium">
+                  <div className="text-center text-destructive text-lg font-medium py-12 rounded-xl bg-card/60 shadow">
                     Không tìm thấy địa điểm phù hợp với lựa chọn của bạn. Vui
                     lòng thử lại với từ khóa hoặc tỉnh/thành khác.
                   </div>
