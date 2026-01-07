@@ -24,12 +24,14 @@ type ReviewPromptProps = {
   booking: BookingForReview;
   open?: boolean;
   setOpen?: (open: boolean) => void;
+  onSuccess?: () => void;
 };
 
 export default function ReviewPrompt({
   booking,
   open,
   setOpen,
+  onSuccess,
 }: ReviewPromptProps) {
   const [stars, setStars] = useState(0);
   const [text, setText] = useState("");
@@ -48,6 +50,7 @@ export default function ReviewPrompt({
           stars,
         });
         setOpen(false);
+        if (onSuccess) onSuccess();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Gửi đánh giá thất bại");
       }

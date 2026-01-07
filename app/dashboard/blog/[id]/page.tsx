@@ -1,9 +1,11 @@
 import { getBlogById } from "@/app/_actions/blog/blog-actions";
 import { notFound } from "next/navigation";
 import { DashboardHeader } from "@/app/_components/dashboard-header";
+import { Header } from "@/app/_components/header";
+import { headers } from "next/headers";
 import Image from "next/image";
-import { Calendar, User, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Calendar, User } from "lucide-react";
+import { BackButtonClientWrapper } from "./BackButtonClientWrapper";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -12,32 +14,25 @@ type Props = {
 export default async function BlogDetailPage({ params }: Props) {
   const { id } = await params;
   const blog = await getBlogById(id);
-
   if (!blog) return notFound();
-
   const formattedDate = new Date(blog.publishedAt).toLocaleDateString("vi-VN", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
+  const headersList = headers();
+  const referer = (await headersList).get("referer") || "";
+  const isDashboard = referer.includes("/dashboard");
 
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-accent/30">
-      <DashboardHeader />
-
+      {isDashboard ? <DashboardHeader /> : <Header />}
       <main className="relative pt-16 pb-24">
         {/* Navigation & Actions */}
         <div className="container max-w-5xl mx-auto px-6 mb-12 flex justify-between items-center">
-          <Link
-            href="/dashboard/blog"
-            className="group flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-            Quay lại danh sách
-          </Link>
+          <BackButtonClientWrapper />
         </div>
-
-        {/* Hero Section */}
+        {/* ...existing code... */}
         <div className="container max-w-4xl mx-auto px-6 mb-16 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold tracking-wider uppercase mb-8">
             Chia sẻ
@@ -61,8 +56,7 @@ export default async function BlogDetailPage({ params }: Props) {
             </div>
           </div>
         </div>
-
-        {/* Featured Image */}
+        {/* ...existing code... */}
         {blog.imageUrl && (
           <div className="container max-w-6xl mx-auto px-4 mb-20">
             <div className="relative aspect-[21/9] rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/5">
@@ -77,19 +71,16 @@ export default async function BlogDetailPage({ params }: Props) {
             </div>
           </div>
         )}
-
-        {/* Content Layout */}
+        {/* ...existing code... */}
         <div className="container max-w-3xl mx-auto px-6">
           {blog.excerpt && (
             <p className="text-xl md:text-2xl text-muted-foreground font-serif italic leading-relaxed mb-12 border-l-4 border-accent pl-8 py-2">
               {blog.excerpt}
             </p>
           )}
-
           <article className="prose prose-lg md:prose-xl prose-primary dark:prose-invert max-w-none prose-headings:font-serif prose-headings:font-light prose-p:leading-relaxed prose-p:text-foreground/80">
             <div dangerouslySetInnerHTML={{ __html: blog.content }} />
           </article>
-
           {/* Footer Tags/Actions */}
           <div className="mt-20 pt-10 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex gap-2">

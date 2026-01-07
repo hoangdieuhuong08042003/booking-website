@@ -9,7 +9,7 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
 
-      const publicRoutes = ["/"];
+      const publicRoutes = ["/", "/dashboard/blog", "/dashboard/blog/[id]"];
       const authRoutes = ["/login", "/register"];
 
       if (nextUrl.pathname.startsWith("/admin")) {
@@ -37,7 +37,11 @@ export const authConfig = {
       }
 
       // Allow access to public routes for everyone
-      if (publicRoutes.includes(nextUrl.pathname)) {
+      // Allow access to /dashboard/blog and its subroutes for everyone
+      if (
+        publicRoutes.includes(nextUrl.pathname) ||
+        nextUrl.pathname.startsWith("/dashboard/blog")
+      ) {
         return true;
       }
 

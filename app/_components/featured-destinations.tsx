@@ -50,9 +50,11 @@ export function FeaturedDestinations() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {blogs.map((post) => (
-              <div
+              <a
                 key={post.id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden flex flex-col"
+                href={`/dashboard/blog/${post.id}`}
+                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                tabIndex={0}
               >
                 <Image
                   src={post.imageUrl || "/placeholder.svg"}
@@ -79,7 +81,7 @@ export function FeaturedDestinations() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         )}

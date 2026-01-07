@@ -22,6 +22,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import ReviewPrompt from "./review-prompt";
 
@@ -65,6 +66,9 @@ export default function BookingDetailClient({
   // State để mở dialog review
   const [openReview, setOpenReview] = useState(false);
 
+  // State để hiển thị thông báo thành công
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const statusColors = {
     ACTIVE: "bg-green-100 text-green-800",
     CANCELLED: "bg-red-100 text-red-800",
@@ -99,6 +103,7 @@ export default function BookingDetailClient({
       await cancelReservation(booking.id);
       setCancelled(true);
       setOpenConfirmDialog(false);
+      setSuccessMessage("Đặt phòng đã được hủy thành công.");
     } catch (err) {
       setError(
         err instanceof Error
@@ -110,8 +115,33 @@ export default function BookingDetailClient({
     }
   };
 
+  // Callback khi review thành công
+  const handleReviewSuccess = () => {
+    setSuccessMessage("Cảm ơn bạn đã đánh giá!");
+    setOpenReview(false);
+  };
+
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
+      {/* Dialog thông báo thành công */}
+      <Dialog
+        open={!!successMessage}
+        onOpenChange={(open) => {
+          if (!open) setSuccessMessage(null);
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Thành công</DialogTitle>
+            <DialogDescription>{successMessage}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button onClick={() => setSuccessMessage(null)}>Đóng</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Header */}
       <div className="bg-primary/5 p-6 border-b border-border">
         <div className="flex justify-between items-start">
@@ -185,7 +215,13 @@ export default function BookingDetailClient({
             </div>
             <div className="text-sm text-muted-foreground">
               <p className="font-medium text-foreground mb-1">Mô tả:</p>
-              <p className="line-clamp-3">{booking.listing?.desc}</p>
+              {/* Hiển thị mô tả theo định dạng HTML */}
+              <div
+                className="line-clamp-3"
+                dangerouslySetInnerHTML={{
+                  __html: booking.listing?.desc || "",
+                }}
+              />
             </div>
           </div>
         </div>
@@ -285,7 +321,7 @@ export default function BookingDetailClient({
           </div>
           <div className="border-t border-border pt-3 flex justify-between">
             <span className="text-lg font-semibold">Tổng tiền</span>
-            <span className="text-2xl font-bold text-accent">
+            <span className="text-2xl font-bold text-red-500">
               {booking.totalPrice.toLocaleString("vi-VN")} ₫
             </span>
           </div>
@@ -337,6 +373,7 @@ export default function BookingDetailClient({
               }}
               open={openReview}
               setOpen={setOpenReview}
+              onSuccess={handleReviewSuccess}
             />
           )}
         </div>
