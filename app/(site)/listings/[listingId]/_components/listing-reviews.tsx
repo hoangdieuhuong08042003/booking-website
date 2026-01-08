@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { getListingReviews } from "@/app/_actions/review/review-actions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Props = { listingId: string };
 
@@ -21,17 +21,16 @@ export default async function ListingReviews({ listingId }: Props) {
       <ul className="mt-4 space-y-4">
         {reviews.map((review) => (
           <li key={review.id} className="flex gap-3 border p-3 rounded-lg">
-            {review.user?.image ? (
-              <Image
-                src={review.user.image}
-                alt={review.user.name ?? "user"}
-                width={32}
-                height={32}
-                className="rounded-full object-cover h-12 w-12"
+            {/* Avatar user */}
+            <Avatar className="size-10 cursor-pointer hover:border-2 hover:border-gray-500">
+              <AvatarImage
+                src={review.user?.image ?? ""}
+                alt={review.user?.name?.charAt(0).toUpperCase() ?? "U"}
               />
-            ) : (
-              <div className="h-12 w-12 rounded-full bg-gray-200" />
-            )}
+              <AvatarFallback className="bg-blue-400 text-white">
+                {review.user?.name?.charAt(0).toUpperCase() ?? "U"}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <div className="font-medium">
