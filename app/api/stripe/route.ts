@@ -36,8 +36,8 @@ export async function POST(req) {
             payment_method_types: ["card"],
             line_items: stripe_obj,
             mode: "payment",
-            success_url: "http://localhost:3000/dashboard/success-page",
-            cancel_url: "http://localhost:3000",
+            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/success-page`,
+            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}`,
             metadata: {
                 startDate,
                 endDate,
