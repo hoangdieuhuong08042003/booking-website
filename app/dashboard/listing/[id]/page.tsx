@@ -178,7 +178,9 @@ export default async function HotelDetailPage({
                     listing.id
                   }?price=${encodeURIComponent(
                     String(listing.pricePerNight)
-                  )}&name=${encodeURIComponent(String(listing.name))}`}
+                  )}&name=${encodeURIComponent(
+                    String(listing.name)
+                  )}&beds=${encodeURIComponent(String(listing.beds ?? ""))}`}
                 >
                   <Button className="w-full py-3 lg:py-4 text-base lg:text-lg">
                     Tiếp tục đặt phòng

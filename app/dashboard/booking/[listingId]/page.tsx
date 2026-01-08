@@ -32,8 +32,9 @@ export default function BookingPage() {
 
   const rawPrice = searchParams?.get("price");
   const rawName = searchParams?.get("name");
+  const rawBeds = searchParams?.get("beds");
 
-  const pricePerNight = rawPrice ? Number(rawPrice) : 2000000; // fallback
+  const pricePerNight = Number(rawPrice);
   const hotelName = rawName
     ? decodeURIComponent(rawName)
     : `Khách sạn ${listingId}`;
@@ -54,6 +55,11 @@ export default function BookingPage() {
   const [bookingConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Lấy số giường từ query string, fallback 1 nếu không có
+  const beds = Number(rawBeds);
+
+  const maxGuests = beds * 2;
+  const isGuestsValid = formData.guests <= maxGuests;
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
@@ -101,12 +107,6 @@ export default function BookingPage() {
     formData.checkIn &&
     formData.checkOut &&
     new Date(formData.checkOut) > new Date(formData.checkIn);
-
-  // Validate guests vs beds (assume 1 bed = 2 guests)
-  const maxGuests = Math.floor(
-    (searchParams?.get("beds") ? Number(searchParams.get("beds")) : 1) * 2
-  );
-  const isGuestsValid = formData.guests <= maxGuests;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,7 +251,7 @@ export default function BookingPage() {
           <div className="lg:col-span-2">
             <div className="bg-card border border-border rounded-lg p-8">
               <h1 className="text-3xl font-bold mb-2">Hoàn tất đặt phòng</h1>
-              <p className="text-muted-foreground mb-8">{hotelName}</p>
+              <p className="text-muted-foreground mb-1">{hotelName}</p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Check-in/Check-out */}
@@ -298,16 +298,22 @@ export default function BookingPage() {
                   <Input
                     type="number"
                     min="1"
-                    max="10"
+                    max={maxGuests}
                     required
                     value={formData.guests}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      let val = parseInt(e.target.value, 10);
+                      if (isNaN(val) || val < 1) val = 1;
+                      if (val > maxGuests) val = maxGuests;
                       setFormData({
                         ...formData,
-                        guests: parseInt(e.target.value),
-                      })
-                    }
+                        guests: val,
+                      });
+                    }}
                   />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Tối đa {maxGuests} khách (2 khách/giường)
+                  </div>
                 </div>
 
                 {/* Guest Info */}
@@ -402,7 +408,6 @@ export default function BookingPage() {
           <div className="lg:col-span-1">
             <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
               <h3 className="text-xl font-bold mb-4">Tóm tắt đặt phòng</h3>
-
               <div className="space-y-3 pb-4 border-b border-border">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Khách sạn</span>
@@ -423,6 +428,10 @@ export default function BookingPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Giá/đêm</span>
                   <span>{pricePerNight.toLocaleString("vi-VN")} ₫</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Số giường</span>
+                  <span className="font-medium">{beds}</span>
                 </div>
               </div>
 
