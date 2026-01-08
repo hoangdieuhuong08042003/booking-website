@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         endDate,
         listingId,
         daysDifference,
-        useId: userId,
+        userId,
         phone,
         specialRequests,
       } = session.metadata!;
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
           userId,
           startDate: new Date(startDate),
           endDate: new Date(endDate),
-          chargeId: session.payment_intent as string,
+          chargeId: (session.payment_intent as string) || session.id, // fallback nếu payment_intent null
           daysDifference: parseInt(daysDifference),
           reservedDates,
           phone,
@@ -80,7 +80,18 @@ export async function POST(req: Request) {
 
         console.log("Reservation created successfully for session:", session.id);
       } catch (error) {
-        console.error("Failed to create reservation:", error);
+        console.error("Failed to create reservation:", error, {
+          listingId,
+          userId,
+          startDate,
+          endDate,
+          chargeId: (session.payment_intent as string) || session.id,
+          daysDifference,
+          reservedDates,
+          phone,
+          totalPrice: session.amount_total,
+          specialRequests,
+        });
         // Log error but return 200 to avoid Stripe retrying
         return NextResponse.json({
           received: true,
@@ -96,7 +107,5 @@ export async function POST(req: Request) {
       { error: "Webhook handler failed" },
       { status: 500 }
     );
-   
   }
-   return new NextResponse(null, { status: 200 });
 }

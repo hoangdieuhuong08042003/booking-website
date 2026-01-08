@@ -10,7 +10,6 @@ type BookingWithListing = Reservation & {
 };
 
 export default async function BookingsPage() {
-  // server-side: get current user and their reservations
   const userId = await getUserId();
   const bookings: BookingWithListing[] = userId
     ? await getBookingsByUser(userId)

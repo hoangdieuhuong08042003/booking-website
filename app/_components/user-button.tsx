@@ -30,7 +30,7 @@ export const UserButton = () => {
     return null;
   }
 
-  const { image, name, email } = data;
+  const { image, name, email, role } = data;
   const avatarFallback = name?.charAt(0).toUpperCase() || "?";
 
   async function logOut() {
@@ -63,12 +63,14 @@ export const UserButton = () => {
           />
         </DropdownMenuItem>
 
-        <Link href="/admin">
-          <DropdownMenuItem>
-            <Settings />
-            Quản lý
-          </DropdownMenuItem>
-        </Link>
+        {role === "admin" && (
+          <Link href="/admin">
+            <DropdownMenuItem>
+              <Settings />
+              Quản lý
+            </DropdownMenuItem>
+          </Link>
+        )}
         <DropdownMenuItem onClick={logOut}>
           <LogOut />
           Đăng xuất

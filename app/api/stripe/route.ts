@@ -44,7 +44,7 @@ export async function POST(req) {
                 listingId,
                 pricePerNight,
                 daysDifference,
-                useId: currentUser.id,
+                userId: currentUser.id, 
                 email: currentUser.email,
                 phone,
                 specialRequests,

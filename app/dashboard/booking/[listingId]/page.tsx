@@ -45,8 +45,7 @@ export default function BookingPage() {
     checkIn: "",
     checkOut: "",
     guests: 1,
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     phone: "",
     specialRequests: "",
@@ -88,15 +87,9 @@ export default function BookingPage() {
 
   useEffect(() => {
     if (!session?.user) return;
-    const name = session.user.name ?? "";
-    const parts = name.trim().split(/\s+/);
-    const first = parts.length ? parts[0] : "";
-    const last = parts.length > 1 ? parts.slice(1).join(" ") : "";
-
     setFormData((prev) => ({
       ...prev,
-      firstName: prev.firstName || first,
-      lastName: prev.lastName || last,
+      name: prev.name || session.user.name || "",
       email: prev.email || session.user.email || "",
       phone: prev.phone,
     }));
@@ -321,26 +314,15 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold mb-4">
                     Thông tin khách hàng
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      type="text"
-                      placeholder="Họ"
-                      required
-                      value={formData.firstName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, firstName: e.target.value })
-                      }
-                    />
-                    <Input
-                      type="text"
-                      placeholder="Tên"
-                      required
-                      value={formData.lastName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, lastName: e.target.value })
-                      }
-                    />
-                  </div>
+                  <Input
+                    type="text"
+                    placeholder="Tên khách hàng"
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                  />
                 </div>
 
                 {/* Contact Info */}
