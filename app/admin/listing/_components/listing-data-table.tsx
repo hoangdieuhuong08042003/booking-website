@@ -61,6 +61,8 @@ export function ListingDataTable({ onAddClick }: { onAddClick: () => void }) {
       searchQuery,
       selectedAmenity,
       selectedRoomType,
+      // thêm orderBy vào key để đảm bảo cache đúng
+      { orderBy: { createdAt: "desc" } },
     ],
     queryFn: () =>
       getListingByFilter({
@@ -69,6 +71,7 @@ export function ListingDataTable({ onAddClick }: { onAddClick: () => void }) {
         title: searchQuery.trim(),
         selectedAmenities: selectedAmenity ? [selectedAmenity] : undefined,
         roomTypeId: selectedRoomType || undefined,
+        orderBy: { createdAt: "desc" }, // truyền orderBy vào
       }),
     refetchOnWindowFocus: false,
   });

@@ -219,6 +219,7 @@ async function getListingByFilter({
   pageIndex = 0,
   pageSize = 20,
   roomTypeId,
+  orderBy, // thêm orderBy
 }: {
   title?: string;
   type?: string;
@@ -230,6 +231,7 @@ async function getListingByFilter({
   pageIndex?: number;
   pageSize?: number;
   roomTypeId?: string;
+  orderBy?: Prisma.ListingOrderByWithRelationInput; // thêm orderBy type
 }) {
   let minBeds: number | undefined;
   if (guests) {
@@ -265,7 +267,7 @@ async function getListingByFilter({
   // ✅ Fetch only the current page
   const listings = await prisma.listing.findMany({
     where,
-    orderBy: { avgRating: "desc" },
+    orderBy: orderBy ?? { createdAt: "desc" }, // ưu tiên orderBy truyền vào, mặc định mới nhất lên đầu
     skip: pageIndex * pageSize,
     take: pageSize,
     select: {

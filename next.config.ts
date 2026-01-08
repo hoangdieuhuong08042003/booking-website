@@ -15,9 +15,10 @@ const nextConfig: NextConfig = {
     "source.unsplash.com",
     "lh3.googleusercontent.com",
     "images.pexels.com",
-    'static.vinwonders.com',
+    "static.vinwonders.com",
     "i.pinimg.com",  
-    "luhanhvietnam.com.vn"
+    "luhanhvietnam.com.vn",
+    "lh3.googleusercontent.com"
   ],
 },
 };

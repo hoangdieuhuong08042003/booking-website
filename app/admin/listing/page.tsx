@@ -25,7 +25,7 @@ const ListingPage = () => {
       toast.success("Listing đã được tạo thành công!");
       // Prepend new listing to the first page cache if exists
       queryClient.setQueryData(
-        ["listings", 0, 10, "", null, null],
+        ["listings", 0, 10, "", null, null, { orderBy: { createdAt: "desc" } }],
         (old: { listings: Listing[]; total: number } | undefined) =>
           old
             ? {
