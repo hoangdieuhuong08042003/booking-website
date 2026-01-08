@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const runtime = "nodejs";
 
 const FLASK_API = "https://booking-website-suggest.onrender.com/recommend_w2v";
 
