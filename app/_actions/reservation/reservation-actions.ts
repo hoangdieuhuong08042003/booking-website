@@ -461,6 +461,24 @@ async function getReservationCountByMonth(year?: number) {
   }));
 }
 
+/**
+ * Thống kê số lượng đặt phòng theo từng trạng thái
+ */
+async function getReservationCountByStatus() {
+  const [active, completed, cancelled, blocked] = await Promise.all([
+    prisma.reservation.count({ where: { status: ReservationStatus.ACTIVE } }),
+    prisma.reservation.count({ where: { status: ReservationStatus.COMPLETED } }),
+    prisma.reservation.count({ where: { status: ReservationStatus.CANCELLED } }),
+    prisma.reservation.count({ where: { status: ReservationStatus.BLOCKED } }),
+  ]);
+  return {
+    ACTIVE: active,
+    COMPLETED: completed,
+    CANCELLED: cancelled,
+    BLOCKED: blocked,
+  };
+}
+
 export {
   createReservation,
   cancelReservation,
@@ -474,4 +492,5 @@ export {
   adminUpdateReservation,
   adminDeleteReservation,
   getReservationCountByMonth,
+  getReservationCountByStatus, // <-- export mới
 };

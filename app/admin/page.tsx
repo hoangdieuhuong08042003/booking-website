@@ -1,7 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import UserGrowthChart from "./_component/use-chart";
-import { getReservationCountByMonth } from "../_actions/reservation/reservation-actions";
+import {
+  getReservationCountByMonth,
+  getReservationCountByStatus,
+} from "../_actions/reservation/reservation-actions";
 import { FaRegImage } from "react-icons/fa";
 
 function getMonthLabels() {
@@ -23,6 +26,7 @@ function getMonthLabels() {
 
 export default async function AdminPage() {
   const reservationStats = await getReservationCountByMonth();
+  const reservationStatusStats = await getReservationCountByStatus();
   const monthLabels = getMonthLabels();
 
   const reservationChartData = monthLabels.map((label, idx) => ({
@@ -65,7 +69,7 @@ export default async function AdminPage() {
             </p>
           </div>
 
-          {/* Additional Stats Cards (Placeholders) */}
+          {/* Đặt phòng thành công */}
           <div className="flex flex-col items-start rounded-lg border border-border/50 bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-500/10">
               <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
@@ -75,9 +79,12 @@ export default async function AdminPage() {
             <p className="text-sm font-medium text-muted-foreground">
               Đặt phòng thành công
             </p>
-            <p className="mt-2 text-2xl font-bold text-foreground">0</p>
+            <p className="mt-2 text-2xl font-bold text-foreground">
+              {reservationStatusStats.COMPLETED.toLocaleString()}
+            </p>
           </div>
 
+          {/* Đang chờ xử lý */}
           <div className="flex flex-col items-start rounded-lg border border-border/50 bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-orange-500/10">
               <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
@@ -87,15 +94,20 @@ export default async function AdminPage() {
             <p className="text-sm font-medium text-muted-foreground">
               Đang chờ xử lý
             </p>
-            <p className="mt-2 text-2xl font-bold text-foreground">0</p>
+            <p className="mt-2 text-2xl font-bold text-foreground">
+              {reservationStatusStats.ACTIVE.toLocaleString()}
+            </p>
           </div>
 
+          {/* Hủy bỏ */}
           <div className="flex flex-col items-start rounded-lg border border-border/50 bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-destructive/10">
               <span className="text-lg font-bold text-destructive">✕</span>
             </div>
             <p className="text-sm font-medium text-muted-foreground">Hủy bỏ</p>
-            <p className="mt-2 text-2xl font-bold text-foreground">0</p>
+            <p className="mt-2 text-2xl font-bold text-foreground">
+              {reservationStatusStats.CANCELLED.toLocaleString()}
+            </p>
           </div>
         </div>
 
