@@ -168,7 +168,7 @@ export function EditListingForm({ listingId }: { listingId: string }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Delete failed");
-      await updateListing(listingId, { thumbnail: "" });
+      await updateListing(listingId, { thumbnail: null }); // set thumbnail to null
       setThumbnail(null);
       toast.success("Đã xoá thumbnail");
     } catch (err) {
