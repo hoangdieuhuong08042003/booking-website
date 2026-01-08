@@ -22,10 +22,17 @@ export function Header() {
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8">
           <Link
-            href="#destinations"
+            href="#hero"
             className="text-foreground/70 hover:text-primary transition"
           >
-            Điểm Đến
+            Trang Chủ
+          </Link>
+
+          <Link
+            href="#featured-destinations"
+            className="text-foreground/70 hover:text-primary transition"
+          >
+            Blog
           </Link>
           <Link
             href="#services"
@@ -33,18 +40,7 @@ export function Header() {
           >
             Dịch Vụ
           </Link>
-          <Link
-            href="#about"
-            className="text-foreground/70 hover:text-primary transition"
-          >
-            Về Chúng Tôi
-          </Link>
-          <Link
-            href="#testimonials"
-            className="text-foreground/70 hover:text-primary transition"
-          >
-            Đánh Giá
-          </Link>
+          {/* Nếu có section về chúng tôi và đánh giá, giữ lại hoặc xóa nếu không có */}
         </div>
 
         <div className="hidden md:flex items-center gap-4">
@@ -77,10 +73,22 @@ export function Header() {
         <div className="md:hidden border-t border-border bg-white">
           <div className="px-4 py-4 space-y-4">
             <Link
-              href="#destinations"
+              href="#hero"
+              className="block text-foreground/70 hover:text-primary transition py-2"
+            >
+              Trang Chủ
+            </Link>
+            <Link
+              href="#featured-destinations"
               className="block text-foreground/70 hover:text-primary transition py-2"
             >
               Điểm Đến
+            </Link>
+            <Link
+              href="#featured-destinations"
+              className="block text-foreground/70 hover:text-primary transition py-2"
+            >
+              Blog
             </Link>
             <Link
               href="#services"
@@ -88,18 +96,7 @@ export function Header() {
             >
               Dịch Vụ
             </Link>
-            <Link
-              href="#about"
-              className="block text-foreground/70 hover:text-primary transition py-2"
-            >
-              Về Chúng Tôi
-            </Link>
-            <Link
-              href="#testimonials"
-              className="block text-foreground/70 hover:text-primary transition py-2"
-            >
-              Đánh Giá
-            </Link>
+            {/* Nếu có section về chúng tôi và đánh giá, giữ lại hoặc xóa nếu không có */}
             <div className="pt-4 space-y-2 border-t border-border">
               <Link
                 href="/auth/login"

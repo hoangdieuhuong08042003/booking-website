@@ -10,13 +10,19 @@ export default function Home() {
     <main className="min-h-screen bg-background">
       <Header />
       <SectionReveal>
-        <HeroSection />
+        <section id="hero">
+          <HeroSection />
+        </section>
       </SectionReveal>
       <SectionReveal>
-        <FeaturedDestinations />
+        <section id="featured-destinations">
+          <FeaturedDestinations />
+        </section>
       </SectionReveal>
       <SectionReveal>
-        <Services />
+        <section id="services">
+          <Services />
+        </section>
       </SectionReveal>
 
       <Footer />
