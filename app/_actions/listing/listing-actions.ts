@@ -73,7 +73,10 @@ async function createListing(data: {
 // Thêm: lấy tất cả listings (không giới hạn số lượng)
 async function getNewestListings() {
   const listings = await prisma.listing.findMany({
-    orderBy: { createdAt: "desc" }, // Sắp xếp mới nhất lên đầu theo thời gian tạo
+    where: {
+      roomsAvailable: { gt: 0 }, // chỉ lấy listing còn phòng trống
+    },
+    orderBy: { createdAt: "desc" },
     select: {
       id: true,
       name: true,
@@ -163,6 +166,7 @@ const blockingStatus: ReservationStatus[] = [ReservationStatus.ACTIVE, Reservati
       amenities: selectedAmenities.length
         ? { every: { amenity: { name: { in: selectedAmenities } } } }
         : undefined,
+      roomsAvailable: { gt: 0 }, // chỉ lấy listing còn phòng trống
     },
     include: {
       province: true,
@@ -259,6 +263,7 @@ async function getListingByFilter({
           },
         }
       : {}),
+    roomsAvailable: { gt: 0 }, // chỉ lấy listing còn phòng trống
   };
 
   // ✅ Get total count for pagination

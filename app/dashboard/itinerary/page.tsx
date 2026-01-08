@@ -145,9 +145,9 @@ export default function ItineraryPage() {
 
         {/* Tabs Section */}
         <div className="mt-10 flex justify-center">
-          <div className="inline-flex rounded-xl bg-card border border-border shadow-sm overflow-hidden">
+          <div className="w-full max-w-7xl rounded-sm bg-card border border-border shadow-sm overflow-hidden flex">
             <button
-              className={`flex items-center gap-2 px-6 py-3 font-semibold transition-colors ${
+              className={`w-full flex-1 flex items-center justify-center gap-2 px-6 py-3 font-semibold transition-colors ${
                 activeTab === "itinerary"
                   ? "bg-primary text-white shadow"
                   : "text-foreground hover:bg-accent/30"
@@ -158,7 +158,7 @@ export default function ItineraryPage() {
               Lịch trình
             </button>
             <button
-              className={`flex items-center gap-2 px-6 py-3 font-semibold transition-colors ${
+              className={`w-full flex-1 flex items-center justify-center gap-2 px-6 py-3 font-semibold transition-colors ${
                 activeTab === "recommend"
                   ? "bg-primary text-white shadow"
                   : "text-foreground hover:bg-accent/30"
@@ -173,6 +173,28 @@ export default function ItineraryPage() {
 
         {/* Tab Content */}
         <div className="mt-8">
+          {/* Greeting/Intro section */}
+          {!itinerary &&
+            !recommendations &&
+            !itineraryLoading &&
+            !recommendLoading && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-10 flex flex-col items-center justify-center gap-4 py-12 rounded-xl bg-card/70 shadow"
+              >
+                <Sparkles className="w-10 h-10 text-primary mb-2" />
+                <h2 className="text-2xl font-bold text-foreground">
+                  Chào mừng bạn đến với Trợ lý Lịch trình Du lịch!
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-xl text-center">
+                  Hãy chọn tỉnh/thành, số ngày và sở thích của bạn, sau đó nhấn
+                  nút tạo lịch trình hoặc gợi ý địa điểm để bắt đầu hành trình
+                  khám phá Việt Nam cùng AI.
+                </p>
+              </motion.div>
+            )}
           <AnimatePresence mode="wait">
             {activeTab === "itinerary" && (
               <motion.div

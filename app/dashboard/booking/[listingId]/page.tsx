@@ -20,9 +20,10 @@ import {
 import { DashboardHeader } from "@/app/_components/dashboard-header";
 import { useSession } from "next-auth/react";
 import { redirectToCheckout } from "@/app/_utils/stripeService";
-import { useSearchParams, useParams } from "next/navigation";
+import { useSearchParams, useParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { getListingById } from "@/app/_actions/listing/listing-actions";
 
 export default function BookingPage() {
   // read dynamic segment + query params from client router
@@ -147,6 +148,63 @@ export default function BookingPage() {
       setSubmitting(false);
     }
   };
+
+  const router = useRouter();
+
+  // Thêm state để kiểm tra phòng còn không
+  const [roomsAvailable, setRoomsAvailable] = useState<number | null>(null);
+  const [listingName, setListingName] = useState<string>(hotelName);
+
+  // Fetch roomsAvailable khi vào trang booking
+  useEffect(() => {
+    async function fetchRooms() {
+      if (!listingId) return;
+      try {
+        const listing = await getListingById(listingId);
+        setRoomsAvailable(listing?.roomsAvailable ?? 0);
+        setListingName(listing?.name || hotelName);
+      } catch {
+        setRoomsAvailable(0);
+      }
+    }
+    fetchRooms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listingId]);
+
+  // Nếu hết phòng thì show dialog và không render form booking
+  if (roomsAvailable !== null && roomsAvailable <= 0) {
+    return (
+      <main className="min-h-screen bg-background">
+        <DashboardHeader />
+        <Dialog open={true} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md" showCloseButton={false}>
+            <DialogHeader>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                <AlertCircle className="h-10 w-10 text-red-600" />
+              </div>
+              <DialogTitle className="text-center text-2xl">
+                Hết phòng!
+              </DialogTitle>
+              <DialogDescription className="text-center">
+                Xin lỗi, khách sạn <b>{listingName}</b> đã hết phòng hoặc vừa
+                được cập nhật bởi quản trị viên.
+                <br />
+                Vui lòng chọn khách sạn khác.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-2 mt-4">
+              <Button
+                onClick={() => router.push("/dashboard")}
+                className="w-full"
+              >
+                Về trang chủ
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </main>
+    );
+  }
 
   if (bookingConfirmed) {
     return (

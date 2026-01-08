@@ -26,7 +26,7 @@ export default function DashboardClient({
   });
 
   const [pageIndex, setPageIndex] = useState(0);
-  const pageSize = 8;
+  const pageSize = 9;
 
   const handleFilterChange = (data: FilterData) => setFilters(data);
 
