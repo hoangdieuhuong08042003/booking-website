@@ -84,9 +84,7 @@ export default async function HotelDetailPage({
                       {rating.toFixed(1)}
                     </span>
                   </div>
-                  <span className="text-muted-foreground text-base">
-                    ({listing.avgRating ?? 0} đánh giá)
-                  </span>
+
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="w-4 h-4" />
                     <span className="font-medium">{location}</span>
