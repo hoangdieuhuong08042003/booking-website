@@ -37,7 +37,7 @@ export default async function BlogDetailPage({ params }: Props) {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold tracking-wider uppercase mb-8">
             Chia sẻ
           </div>
-          <h1 className="text-5xl md:text-7xl font-serif font-light tracking-tight text-foreground leading-[1.1] mb-8 text-balance">
+          <h1 className="text-5xl md:text-7xl  font-light tracking-tight text-foreground leading-[1.1] mb-8 text-balance">
             {blog.title}
           </h1>
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground border-y border-border py-6">
@@ -74,7 +74,7 @@ export default async function BlogDetailPage({ params }: Props) {
         {/* ...existing code... */}
         <div className="container max-w-3xl mx-auto px-6">
           {blog.excerpt && (
-            <p className="text-xl md:text-2xl text-muted-foreground font-serif italic leading-relaxed mb-12 border-l-4 border-accent pl-8 py-2">
+            <p className="text-xl md:text-2xl text-muted-foreground  italic leading-relaxed mb-12 border-l-4 border-accent pl-8 py-2">
               {blog.excerpt}
             </p>
           )}
