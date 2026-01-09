@@ -119,14 +119,14 @@ export default function ItineraryPage() {
           {/* Keywords Section */}
           <div className="lg:col-span-2 space-y-8">
             <KeywordGroup
-              title="I. Bạn muốn đi đâu?"
+              title="I. Chủ đề chuyến đi chính"
               items={TRIP_THEME_OPTIONS.map((opt) => opt.label)}
               selected={primary !== null ? [primary] : []}
               toggle={(idx: number) => setPrimary(idx === primary ? null : idx)}
               delay={0.3}
             />
             <KeywordGroup
-              title="II. Cảm giác mong muốn"
+              title="II. Hoạt động yêu thích"
               items={TRAVEL_STYLE_OPTIONS.map((opt) => opt.label)}
               selected={attributes}
               toggle={(idx: number) => {
