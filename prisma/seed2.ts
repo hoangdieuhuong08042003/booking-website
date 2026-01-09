@@ -54,6 +54,18 @@ async function seedReviews() {
 async function main() {
   try {
     await seedReviews();
+    // Sau khi seed review, cập nhật avgRating cho tất cả listing
+    const listings = await prisma.listing.findMany({ select: { id: true } });
+    for (const listing of listings) {
+      const avg = await prisma.review.aggregate({
+        where: { listingId: listing.id },
+        _avg: { stars: true },
+      });
+      await prisma.listing.update({
+        where: { id: listing.id },
+        data: { avgRating: avg._avg.stars ?? 0 },
+      });
+    }
   } catch (error) {
     console.error("❌ Seeding reviews failed:", error);
     throw error;
